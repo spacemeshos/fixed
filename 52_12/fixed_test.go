@@ -266,7 +266,7 @@ var mulTestCases = []struct {
 		"52_12": "0+0000/4096", // 0, which is closer than 0:0001 (in decimal, 0.000244140625)
 	},
 }, {
-	// Round the Int52_12 calculation down.
+	// Round the Fixed calculation down.
 	x: 1.44140625, // 1 + 1808/4096 = 5904/4096, approximately 92/64
 	y: 1.44140625, // 1 + 1808/4096 = 5904/4096, approximately 92/64
 	z: map[string]float64{
@@ -280,7 +280,7 @@ var mulTestCases = []struct {
 		"52_12": "2+0318/4096", // 2.07763671875, which is closer than 2:0319 (in decimal, 2.077880859375)
 	},
 }, {
-	// Round the Int52_12 calculation up.
+	// Round the Fixed calculation up.
 	x: 1.44140625,     // 1 + 1808/4096 = 5904/4096, approximately 92/64
 	y: 1.441650390625, // 1 + 1809/4096 = 5905/4096, approximately 92/64
 	z: map[string]float64{
@@ -407,7 +407,7 @@ func TestMulu32(t *testing.T) {
 }
 
 // mul (with a lower case 'm') is an alternative implementation of Fixed.Mul
-// (with an upper case 'M'). It has the same structure as the Int52_12.Mul
+// (with an upper case 'M'). It has the same structure as the Fixed.Mul
 // implementation, but Fixed.mul is easier to test since Go has built-in
 // 64-bit integers.
 func (x Fixed) mul(y Fixed) Fixed {

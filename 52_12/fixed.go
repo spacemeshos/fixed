@@ -35,7 +35,7 @@ func I(i int) Fixed {
 // The integer part ranges from -2251799813685248 to 2251799813685247,
 // inclusive. The fractional part has 12 bits of precision.
 //
-// For example, the number one-and-a-quarter is Int52_12(1<<12 + 1<<10).
+// For example, the number one-and-a-quarter is Fixed(1<<12 + 1<<10).
 type Fixed int64
 
 // String returns a human-readable representation of a fixed-point number.

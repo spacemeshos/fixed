@@ -30,24 +30,17 @@ func I(i int) Fixed {
 	return Fixed(i << fracBits)
 }
 
-// Fixed is a signed fixed-point number.
+// Fixed is a signed 40.24 fixed-point number.
 //
-// The integer part ranges from -33554432 to 33554431, inclusive. The
-// fractional part has 6 bits of precision.
+// The integer part ranges from -549755813888 to 549755813889,
+// inclusive. The fractional part has 24 bits of precision.
 //
-// For example, the number one-and-a-quarter is Int26_6(1<<6 + 1<<4).
-//
-// Int52_12 is a signed 52.12 fixed-point number.
-//
-// The integer part ranges from -2251799813685248 to 2251799813685247,
-// inclusive. The fractional part has 12 bits of precision.
-//
-// For example, the number one-and-a-quarter is Int52_12(1<<12 + 1<<10).
+// For example, the number one-and-a-quarter is Fixed(1<<24 + 1<<22).
 type Fixed int64
 
 // String returns a human-readable representation of a fixed-point number.
 //
-// For example, the number one-and-a-quarter becomes "1+16/64" (the divisor is 2^precision).
+// For example, the number one-and-a-quarter becomes "1+4194304/16777216" (the divisor is 2^precision).
 func (x Fixed) String() string {
 	const shift, mask = fracBits, 1<<fracBits - 1
 	format := fmt.Sprintf("%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits)
