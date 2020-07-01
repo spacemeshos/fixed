@@ -530,9 +530,8 @@ func TestFixed_Div(t *testing.T) {
 }
 
 func BenchmarkFixed_Mul(b *testing.B) {
-	rng := rand.New(rand.NewSource(1))
 	for i := 0; i < b.N; i++ {
-		x, y := I(rng.Int()), I(rng.Int())
+		x, y := Fixed(3*i), Fixed(i<<(fracBits-3))
 		x.Mul(y)
 	}
 }
