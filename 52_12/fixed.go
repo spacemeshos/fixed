@@ -13,9 +13,9 @@ import (
 
 // TODO: implement fmt.Formatter for %f and %g.
 
+// fracBits is the number of fractional bits. It cannot be more than half the total bits, otherwise the implementation
+// of Mul() can overflow in the fractional part multiplication.
 const fracBits = 12
-// fracBits cannot be more than half the total bits, otherwise the implementation of Mul() can overflow in the
-// fractional part multiplication.
 
 var (
 	totalBits     = unsafe.Sizeof(Fixed(0)) * 8
