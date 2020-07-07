@@ -8,6 +8,7 @@ package fixed // import "github.com/spacemeshos/fixed/52_12"
 import (
 	"fmt"
 	"math"
+	"math/bits"
 	"unsafe"
 )
 
@@ -73,6 +74,16 @@ func (x Fixed) Mul(y Fixed) Fixed {
 	ret += (xf * yf) >> fracBits           // Multiply fractions by each other.
 	ret += (xf * yf) >> (fracBits - 1) & 1 // Round to nearest, instead of rounding down.
 	return ret
+}
+
+func (x Fixed) Mul2(y Fixed) Fixed {
+	xs := x >> (totalBits - 1)                                 // x >= 0 ? 0 : -1
+	ys := y >> (totalBits - 1)                                 // y >= 0 ? 0 : -1
+	sign := 1 + 2*(xs^ys)                                      // x*y >= 0 ? 1 : -1
+	hi, lo := bits.Mul64(uint64((x^xs)-xs), uint64((y^ys)-ys)) // abs(x): (x^xs)-xs
+	rounding := (lo >> (fracBits - 1)) & 1
+	println(x.String(), y.String(), rounding, hi, lo, uint64((x^xs)-xs), uint64((y^ys)-ys))
+	return sign * Fixed(hi<<(totalBits-fracBits)|lo>>fracBits+rounding)
 }
 
 // Div returns x/y in fixed-point arithmetic.

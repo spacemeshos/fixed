@@ -361,6 +361,26 @@ func TestFixedMulByOneMinusIota(t *testing.T) {
 	}
 }
 
+func TestFixed_Mul(t *testing.T) {
+	const (
+		oneMinusIota  = Fixed(1<<fracBits) - 1
+		oneMinusIotaF = float64(oneMinusIota) / (1 << fracBits)
+	)
+
+	i := uintptr(11)
+	x := -Fixed(1 << i)
+
+	xF := float64(x) / (1 << fracBits)
+	wantF := xF * oneMinusIotaF * (1 << fracBits)
+	want := Fixed(math.Floor(wantF + 0.5))
+
+	if got := x.Mul2(oneMinusIota); got != want {
+		t.Errorf("🛑 neg=%t, i=%d, x=%v, Mul: got %v, want %v", true, i, x, got, want)
+	} else {
+		t.Logf("✅ neg=%t, i=%d, x=%v, Mul: got %v, want %v", true, i, x, got, want)
+	}
+}
+
 func TestFixedMulVsMul(t *testing.T) {
 	if totalBits != 32 {
 		return
@@ -536,6 +556,15 @@ func BenchmarkFixed_Mul(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		x, y := Fixed(3*i), Fixed(i<<(fracBits-3))
 		r = x.Mul(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_Mul2(b *testing.B) {
+	var r Fixed
+	for i := 0; i < b.N; i++ {
+		x, y := Fixed(3*i), Fixed(i<<(fracBits-3))
+		r = x.Mul2(y)
 	}
 	Result = r
 }
