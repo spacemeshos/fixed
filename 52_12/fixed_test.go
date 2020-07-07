@@ -529,9 +529,13 @@ func TestFixed_Div(t *testing.T) {
 	}
 }
 
+var Result Fixed
+
 func BenchmarkFixed_Mul(b *testing.B) {
+	var r Fixed
 	for i := 0; i < b.N; i++ {
 		x, y := Fixed(3*i), Fixed(i<<(fracBits-3))
-		x.Mul(y)
+		r = x.Mul(y)
 	}
+	Result = r
 }
