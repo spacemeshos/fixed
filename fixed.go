@@ -7,21 +7,9 @@ package fixed // import "github.com/spacemeshos/fixed"
 
 import (
 	"fmt"
-	"math"
-	"unsafe"
 )
 
 // TODO: implement fmt.Formatter for %f and %g.
-
-// fracBits is the number of fractional bits. It cannot be more than half the total bits, otherwise the implementation
-// of Mul() can overflow in the fractional part multiplication.
-const fracBits = 12
-
-var (
-	totalBits     = unsafe.Sizeof(Fixed(0)) * 8
-	fracDecDigits = int(math.Log10(1<<fracBits)) + 1
-	fracMask      = Fixed(1<<fracBits - 1)
-)
 
 // I returns the integer value i as a Fixed.
 //
@@ -38,18 +26,26 @@ func I(i int) Fixed {
 // For example, the number one-and-a-quarter is Fixed(1<<12 + 1<<10).
 type Fixed int64
 
+const (
+	// fracBits is the number of fractional bits. It cannot be more than half the total bits, otherwise the implementation
+	// of Mul() can overflow in the fractional part multiplication.
+	fracBits      uintptr = 12
+	totalBits     uintptr = 64   // unsafe.Sizeof(Fixed(0)) * 8
+	fracDecDigits uintptr = 4    // int(math.Log10(1<<fracBits)) + 1
+	fracMask      Fixed   = 4095 // Fixed(1<<fracBits - 1)
+)
+
 // String returns a human-readable representation of a fixed-point number.
 //
 // For example, the number one-and-a-quarter becomes "1+1024/4096" (the divisor is 2^precision).
 func (x Fixed) String() string {
-	const shift, mask = fracBits, 1<<fracBits - 1
 	format := fmt.Sprintf("%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits)
 	if x >= 0 {
-		return fmt.Sprintf(format, x>>shift, x&mask)
+		return fmt.Sprintf(format, x>>fracBits, x&fracMask)
 	}
 	x = -x
 	if x >= 0 {
-		return fmt.Sprintf("-"+format, x>>shift, x&mask)
+		return fmt.Sprintf("-"+format, x>>fracBits, x&fracMask)
 	}
 	return fmt.Sprintf(format, -(1 << (totalBits - fracBits - 1)), 0) // This is the minimum value.
 }
