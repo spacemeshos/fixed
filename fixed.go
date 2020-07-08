@@ -43,10 +43,15 @@ type Fixed int64
 // For example, the number one-and-a-quarter becomes "1+1024/4096" (the divisor is 2^precision).
 func (x Fixed) String() string {
 	const shift, mask = fracBits, 1<<fracBits - 1
-	format := fmt.Sprintf("%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits) // e.g. "%d+%04d/4096" for 12 bit fractions
-	return fmt.Sprintf(format, x>>shift, x&mask)
-	// TODO: Improve negative number representation.
-	//  E.g. With 6 bit fractions, -1/2 is printed as -1+32/64, but 0-32/64 would be more intuitive.
+	format := fmt.Sprintf("%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits)
+	if x >= 0 {
+		return fmt.Sprintf(format, x>>shift, x&mask)
+	}
+	x = -x
+	if x >= 0 {
+		return fmt.Sprintf("-"+format, x>>shift, x&mask)
+	}
+	return fmt.Sprintf(format, -(1 << (totalBits - fracBits - 1)), 0) // This is the minimum value.
 }
 
 // Floor returns the greatest integer value less than or equal to x.

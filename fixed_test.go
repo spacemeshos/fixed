@@ -529,6 +529,7 @@ func TestFixed_Div(t *testing.T) {
 	}
 }
 
+//noinspection GoUnusedGlobalVariable
 var Result Fixed
 
 func BenchmarkFixed_Mul(b *testing.B) {
