@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package fixed implements fixed-point integer types.
-package fixed // import "github.com/spacemeshos/fixed/52_12"
+package fixed // import "github.com/spacemeshos/fixed"
 
 import (
 	"fmt"
