@@ -414,7 +414,7 @@ func TestFixed_UnsafeDiv(t *testing.T) {
 }
 
 func TestFixed_Div(t *testing.T) {
-	Fixed_Div_(t, func(a, b Fixed) Fixed { return a.UnsafeDiv(b) })
+	Fixed_Div_(t, func(a, b Fixed) Fixed { return a.Div(b) })
 }
 
 //noinspection GoUnusedGlobalVariable
