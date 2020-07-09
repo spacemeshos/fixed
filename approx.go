@@ -8204,3 +8204,13 @@ var expApprox = []int64{
 
 const expApproxLen = 4097
 const expApproxStep = 1
+
+var epow = []int64{
+	/*pow(e,0) */ 4096,
+	/*pow(e,1) */ 11134,
+	/*pow(e,2) */ 30265,
+	/*pow(e,4) */ 223634,
+	/*pow(e,8) */ 12210003,
+	/*pow(e,16)*/ 36397508692,
+	/*pow(e,32)*/ 323432284908260096,
+}

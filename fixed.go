@@ -54,7 +54,6 @@ const (
 	fracMask      int64  = 4095 // Fixed(1<<fracBits - 1)
 	roundValue    uint64 = uint64(1) << (fracBits - 1)
 	oneValue      int64  = int64(1) << fracBits
-	carryMask     uint64 = ^(uint64(1)<<(64-fracBits) - 1)
 )
 
 var format = fmt.Sprintf("%%s%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits)
@@ -102,7 +101,7 @@ func (x Fixed) Mul(y Fixed) Fixed {
 	hi = hi - uint64((x.int64>>63)&y.int64) - uint64((y.int64>>63)&x.int64)
 	lo, carry := bits.Add64(lo, roundValue, 0)
 	hi, carry = bits.Add64(hi, 0, carry)
-	if carry != 0 || ((hi&carryMask) != 0 && (hi&carryMask) != carryMask) {
+	if carry != 0 || hi>>63 != hi>>(fracBits-1)&1 {
 		panic(ErrOverflow)
 	}
 	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}

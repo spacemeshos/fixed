@@ -23,12 +23,16 @@ func iexp(x Fixed) Fixed {
 	if n == 1 {
 		return e
 	}
-	for n > 0 {
+	for i := 1; n > 0 && i < len(epow); i++ {
 		if n&1 == 1 {
-			r = r.Mul(e)
+			//r = r.Mul(e)
+			r = r.Mul(Fixed{epow[i]})
 		}
-		e = e.Mul(e)
+		//e = e.Mul(e)
 		n = n >> 1
+	}
+	if n > 0 {
+		panic(ErrOverflow)
 	}
 	return r
 }
