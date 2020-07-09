@@ -7,7 +7,6 @@ package fixed
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"testing"
 )
 
@@ -99,10 +98,14 @@ var testCases = []struct {
 	ceil:  -7,
 }}
 
+func I(i int) Fixed {
+	return Fixed{int64(i)}
+}
+
 func TestFixed(t *testing.T) {
-	const one = Fixed(1 << fracBits)
+	one := Raw(oneValue)
 	for i, tc := range testCases {
-		x := Fixed(tc.x * (1 << fracBits))
+		x := From(tc.x)
 		s, found := tc.s[fmt.Sprintf("%d_%d", totalBits-fracBits, fracBits)]
 		if !found {
 			t.Logf("case #%d has no string representation for %d_%d", i, totalBits-fracBits, fracBits)
@@ -120,12 +123,6 @@ func TestFixed(t *testing.T) {
 		}
 		if got, want := x.Mul(one), x; got != want {
 			t.Errorf("tc.x=%v: Mul by one: got %v, want %v", tc.x, got, want)
-		}
-		if totalBits != 32 {
-			continue
-		}
-		if got, want := x.mul(one), x; got != want {
-			t.Errorf("tc.x=%v: mul by one: got %v, want %v", tc.x, got, want)
 		}
 	}
 }
@@ -297,12 +294,12 @@ var mulTestCases = []struct {
 
 func TestFixedMul(t *testing.T) {
 	for i, tc := range mulTestCases {
-		x := Fixed(tc.x * (1 << fracBits))
-		y := Fixed(tc.y * (1 << fracBits))
+		x := From(tc.x)
+		y := From(tc.y)
 		want, found := tc.z[fmt.Sprintf("%d_%d", totalBits-fracBits, fracBits)]
 		if !found {
 			t.Logf("case #%d has no float representation for %d_%d", i, totalBits-fracBits, fracBits)
-		} else if z := float64(x) * float64(y) / (1 << (fracBits * 2)); z != want {
+		} else if z := float64(x.int64) * float64(y.int64) / (1 << (fracBits * 2)); z != want {
 			t.Errorf("tc.x=%v, tc.y=%v: z: got %v, want %v", tc.x, tc.y, z, want)
 			continue
 		}
@@ -316,16 +313,14 @@ func TestFixedMul(t *testing.T) {
 }
 
 func TestFixedMulByOneMinusIota(t *testing.T) {
-	const (
-		oneMinusIota  = Fixed(1<<fracBits) - 1
-		oneMinusIotaF = float64(oneMinusIota) / (1 << fracBits)
-	)
+	oneMinusIota := I(1<<fracBits - 1)
+	oneMinusIotaF := float64(oneMinusIota.int64) / (1 << fracBits)
 
 	for _, neg := range []bool{false, true} {
-		for i := uintptr(0); i < totalBits; i++ {
-			x := Fixed(1 << i)
+		for i := 0; i < totalBits; i++ {
+			x := I(1 << i)
 			if neg {
-				x = -x
+				x.int64 = -x.int64
 			} else if i == totalBits-1 {
 				// A signed int32 can't represent 1<<31.
 				// A signed int64 can't represent 1<<63.
@@ -333,141 +328,26 @@ func TestFixedMulByOneMinusIota(t *testing.T) {
 			}
 
 			// want equals x * oneMinusIota, rounded to nearest.
-			want := Fixed(0)
-			if -1<<fracBits < x && x < 1<<fracBits {
+			want := Fixed{}
+			if -1<<fracBits < x.int64 && x.int64 < 1<<fracBits {
 				// (x * oneMinusIota) isn't exactly representable as an
 				// Fixed. Calculate the rounded value using float64 math.
-				xF := float64(x) / (1 << fracBits)
+				xF := float64(x.int64) / (1 << fracBits)
 				wantF := xF * oneMinusIotaF * (1 << fracBits)
-				want = Fixed(math.Floor(wantF + 0.5))
+				want.int64 = int64(math.Floor(wantF + 0.5))
 			} else {
 				// (x * oneMinusIota) is exactly representable.
-				want = oneMinusIota << (i - fracBits)
+				want.int64 = oneMinusIota.int64 << (i - fracBits)
 				if neg {
-					want = -want
+					want.int64 = -want.int64
 				}
 			}
 
 			if got := x.Mul(oneMinusIota); got != want {
 				t.Errorf("neg=%t, i=%d, x=%v, Mul: got %v, want %v", neg, i, x, got, want)
 			}
-			if totalBits != 32 {
-				continue
-			}
-			if got := x.mul(oneMinusIota); got != want {
-				t.Errorf("neg=%t, i=%d, x=%v, mul: got %v, want %v", neg, i, x, got, want)
-			}
 		}
 	}
-}
-
-func TestFixedMulVsMul(t *testing.T) {
-	if totalBits != 32 {
-		return
-	}
-	rng := rand.New(rand.NewSource(1))
-	for i := 0; i < 10000; i++ {
-		u := Fixed(rng.Uint32())
-		v := Fixed(rng.Uint32())
-		Mul := u.Mul(v)
-		mul := u.mul(v)
-		if Mul != mul {
-			t.Errorf("u=%#08x, v=%#08x: Mul=%#08x and mul=%#08x differ",
-				uint32(u), uint32(v), uint32(Mul), uint32(mul))
-		}
-	}
-}
-
-func TestMuli32(t *testing.T) {
-	rng := rand.New(rand.NewSource(2))
-	for i := 0; i < 10000; i++ {
-		u := int32(rng.Uint32())
-		v := int32(rng.Uint32())
-		lo, hi := muli32(u, v)
-		got := uint64(lo) | uint64(hi)<<32
-		want := uint64(int64(u) * int64(v))
-		if got != want {
-			t.Errorf("u=%#08x, v=%#08x: got %#016x, want %#016x", uint32(u), uint32(v), got, want)
-		}
-	}
-}
-
-func TestMulu32(t *testing.T) {
-	rng := rand.New(rand.NewSource(3))
-	for i := 0; i < 10000; i++ {
-		u := rng.Uint32()
-		v := rng.Uint32()
-		lo, hi := mulu32(u, v)
-		got := uint64(lo) | uint64(hi)<<32
-		want := uint64(u) * uint64(v)
-		if got != want {
-			t.Errorf("u=%#08x, v=%#08x: got %#016x, want %#016x", u, v, got, want)
-		}
-	}
-}
-
-// mul (with a lower case 'm') is an alternative implementation of Fixed.Mul
-// (with an upper case 'M'). It has the same structure as the Fixed.Mul
-// implementation, but Fixed.mul is easier to test since Go has built-in
-// 64-bit integers.
-func (x Fixed) mul(y Fixed) Fixed {
-	const M, N = 26, 6
-	lo, hi := muli32(int32(x), int32(y))
-	ret := Fixed(hi<<M | lo>>N)
-	ret += Fixed((lo >> (N - 1)) & 1) // Round to nearest, instead of rounding down.
-	return ret
-}
-
-// muli32 multiplies two int32 values, returning the 64-bit signed integer
-// result as two uint32 values.
-//
-// muli32 isn't used directly by this package, but it has the same structure as
-// muli64, and muli32 is easier to test since Go has built-in 64-bit integers.
-func muli32(u, v int32) (lo, hi uint32) {
-	const (
-		s    = 16
-		mask = 1<<s - 1
-	)
-
-	u1 := uint32(u >> s)
-	u0 := uint32(u & mask)
-	v1 := uint32(v >> s)
-	v0 := uint32(v & mask)
-
-	w0 := u0 * v0
-	t := u1*v0 + w0>>s
-	w1 := t & mask
-	w2 := uint32(int32(t) >> s)
-	w1 += u0 * v1
-	return uint32(u) * uint32(v), u1*v1 + w2 + uint32(int32(w1)>>s)
-}
-
-// mulu32 is like muli32, except that it multiplies unsigned instead of signed
-// values.
-//
-// This implementation comes from $GOROOT/src/runtime/softfloat64.go's mullu
-// function, which is in turn adapted from Hacker's Delight.
-//
-// mulu32 (and its corresponding test, TestMulu32) isn't used directly by this
-// package. It is provided in this test file as a reference point to compare
-// the muli32 (and TestMuli32) implementations against.
-func mulu32(u, v uint32) (lo, hi uint32) {
-	const (
-		s    = 16
-		mask = 1<<s - 1
-	)
-
-	u0 := u & mask
-	u1 := u >> s
-	v0 := v & mask
-	v1 := v >> s
-
-	w0 := u0 * v0
-	t := u1*v0 + w0>>s
-	w1 := t & mask
-	w2 := t >> s
-	w1 += u0 * v1
-	return u * v, u1*v1 + w2 + w1>>s
 }
 
 var divTestCases = []struct {
@@ -515,28 +395,136 @@ var divTestCases = []struct {
 	},
 }}
 
-func TestFixed_Div(t *testing.T) {
+func Fixed_Div_(t *testing.T, div func(a, b Fixed) Fixed) {
 	for i, tc := range divTestCases {
-		x, y := I(tc.x), I(tc.y)
+		x, y := New(tc.x), New(tc.y)
 		z := x.Div(y)
 		got := z.String()
 		s, found := tc.s[fmt.Sprintf("%d_%d", totalBits-fracBits, fracBits)]
 		if !found {
 			t.Logf("case #%d has no string representation for %d_%d", i, totalBits-fracBits, fracBits)
 		} else if got != s {
-			t.Errorf("got: %s, want: %s", got, s)
+			t.Errorf("got: %s, want: %s, %v/%v", got, s, tc.x, tc.y)
 		}
 	}
+}
+
+func TestFixed_UnsafeDiv(t *testing.T) {
+	Fixed_Div_(t, func(a, b Fixed) Fixed { return a.UnsafeDiv(b) })
+}
+
+func TestFixed_Div(t *testing.T) {
+	Fixed_Div_(t, func(a, b Fixed) Fixed { return a.UnsafeDiv(b) })
 }
 
 //noinspection GoUnusedGlobalVariable
 var Result Fixed
 
+func (a Fixed) refMul(b Fixed) Fixed {
+	x := a.int64
+	y := b.int64
+	xw, yw := x>>fracBits, y>>fracBits     // Whole part of x and y.
+	xf, yf := x&fracMask, y&fracMask       // Fractional part of x and y.
+	ret := (xw * yw) << fracBits           // Multiply whole part.
+	ret += xw*yf + yw*xf                   // Multiply each whole by other fraction.
+	ret += (xf * yf) >> fracBits           // Multiply fractions by each other.
+	ret += (xf * yf) >> (fracBits - 1) & 1 // Round to nearest, instead of rounding down.
+	return Fixed{ret}
+}
+
+func BenchmarkFixed_refMul(b *testing.B) {
+	var r Fixed
+	for i := 0; i < b.N; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.refMul(y)
+	}
+	Result = r
+}
+
+func (x Fixed) refDiv(y Fixed) Fixed {
+	ret := x.int64 / y.int64 << fracBits                          // Calculate whole part.
+	ret += x.int64 % y.int64 << fracBits / y.int64                // Add fractional part.
+	ret += x.int64 % y.int64 << fracBits % y.int64 << 1 / y.int64 // Round to nearest, instead of rounding down.
+	return Fixed{ret}
+}
+
+func BenchmarkFixed_refDiv(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.refDiv(y)
+	}
+	Result = r
+}
+
 func BenchmarkFixed_Mul(b *testing.B) {
 	var r Fixed
 	for i := 0; i < b.N; i++ {
-		x, y := Fixed(3*i), Fixed(i<<(fracBits-3))
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
 		r = x.Mul(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_UnsafeMul(b *testing.B) {
+	var r Fixed
+	for i := 0; i < b.N; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.UnsafeMul(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_UnsafeDiv(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.UnsafeDiv(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_Div(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.Div(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_UnsafeAdd(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.UnsafeAdd(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_Add(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i<<(fracBits-3)))
+		r = x.Add(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_UnsafeSub(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i))
+		r = x.UnsafeSub(y)
+	}
+	Result = r
+}
+
+func BenchmarkFixed_Sub(b *testing.B) {
+	var r Fixed
+	for i := 1; i < b.N+1; i++ {
+		x, y := Raw(int64(3*i)), Raw(int64(i))
+		r = x.Sub(y)
 	}
 	Result = r
 }
