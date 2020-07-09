@@ -10,14 +10,10 @@ func TestRange_Exp(t *testing.T) {
 		a := Fixed{int64(i)}
 		y := Exp(a)
 		got := y.Float()
-		want0 := math.Exp(a.Float())
-		want1 := math.Exp(Fixed{a.int64 + 1}.Float())
-		if want0 > want1 {
-			want0, want1 = want1, want0
-		}
+		want:= math.Exp(Fixed{a.int64}.Float())
 		epsilon := got / 1000
-		if got < want0-epsilon || got > want1+epsilon {
-			t.Errorf("exp(%v) => %v: got %v, want [%v,%v]", a.Float(), y, got, want0, want1)
+		if got < want-epsilon || got > want+epsilon {
+			t.Errorf("exp(%v) => %v: got %v, want %v", a.Float(), y, got, want)
 			t.FailNow()
 		}
 	}
