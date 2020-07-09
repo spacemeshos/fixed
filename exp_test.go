@@ -38,13 +38,13 @@ func TestRange_ExpEpowMax(t *testing.T) {
 }
 
 func BenchmarkFixed_Exp(b *testing.B) {
-	for i := 1; i < 1000000; i++ {
+	for i := 1; i < b.N+1; i++ {
 		Result = Exp(Fixed{int64(i % 130000)})
 	}
 }
 
-func BenchmarkFixed_RefExp(b *testing.B) {
-	for i := 1; i < 1000000; i++ {
+func BenchmarkFixed_ExpRef(b *testing.B) {
+	for i := 1; i < b.N+1; i++ {
 		Result = From(math.Exp(Fixed{int64(i % 130000)}.Float()))
 	}
 }

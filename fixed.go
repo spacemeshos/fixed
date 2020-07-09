@@ -8,7 +8,6 @@ package fixed // import "github.com/spacemeshos/fixed"
 import (
 	"errors"
 	"fmt"
-	"math/bits"
 )
 
 var ErrOverflow = errors.New("overflow")
@@ -92,66 +91,6 @@ func (x Fixed) Ceil() int {
 // Value returns interval value
 func (x Fixed) Value() int64 {
 	return x.int64
-}
-
-// Mul returns x*y in fixed-point arithmetic.
-// Panics if overflows
-func (x Fixed) Mul(y Fixed) Fixed {
-	hi, lo := bits.Mul64(uint64(x.int64), uint64(y.int64))
-	hi = hi - uint64((x.int64>>63)&y.int64) - uint64((y.int64>>63)&x.int64)
-	lo, carry := bits.Add64(lo, roundValue, 0)
-	hi, carry = bits.Add64(hi, 0, carry)
-	if carry != 0 || hi>>63 != hi>>(fracBits-1)&1 {
-		panic(ErrOverflow)
-	}
-	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}
-}
-
-// UnsafeMul returns x*y in fixed-point arithmetic.
-// Does not have overflow check
-func (x Fixed) UnsafeMul(y Fixed) Fixed {
-	hi, lo := bits.Mul64(uint64(x.int64), uint64(y.int64))
-	hi = hi - uint64((x.int64>>63)&y.int64) - uint64((y.int64>>63)&x.int64)
-	lo, carry := bits.Add64(lo, roundValue, 0)
-	hi, _ = bits.Add64(hi, 0, carry)
-	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}
-}
-
-// Div returns x/y in fixed-point arithmetic.
-// Panics if overflows
-func (x Fixed) Div(y Fixed) Fixed {
-	xs := x.int64 >> 63
-	ys := y.int64 >> 63
-	a := uint64((x.int64 ^ xs) - xs)        // abs
-	b := uint64((y.int64 ^ ys) - ys)        // abs
-	hi, lo := a>>(64-fracBits), a<<fracBits // а*frac
-	// will panic when divides by zero or occurs overflow
-	v, rem := bits.Div64(hi, lo, b)
-	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
-	//                            (rem<<1)/b ∈ [0,1]
-	// round to near
-	v, carry := bits.Add64(v, (rem<<1)/b, 0)
-	if carry != 0 {
-		panic(ErrOverflow)
-	}
-	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
-}
-
-// UsafeDiv returns x/y in fixed-point arithmetic.
-// Does not have overflow check (but bits.Div64 has it's own)
-func (x Fixed) UnsafeDiv(y Fixed) Fixed {
-	xs := x.int64 >> 63
-	ys := y.int64 >> 63
-	a := uint64((x.int64 ^ xs) - xs)        // abs
-	b := uint64((y.int64 ^ ys) - ys)        // abs
-	hi, lo := a>>(64-fracBits), a<<fracBits // а*frac
-	// will panic when divides by zero or occurs overflow
-	v, rem := bits.Div64(hi, lo, b)
-	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
-	//                            (rem<<1)/b ∈ [0,1]
-	// round to near
-	v, _ = bits.Add64(v, (rem<<1)/b, 0)
-	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
 }
 
 // Add returns x+y in fixed-point arithmetic.

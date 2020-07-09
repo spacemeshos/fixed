@@ -2,8 +2,9 @@ package fixed
 
 const eValue = int64(2718281) * (1 << fracBits) / 1000000
 
-// Exp calculate e^x
+// Exp calculates e^x
 func Exp(x Fixed) Fixed {
+	// e^x = e^(i+f) = e^i*e^f => iexp(x)*fexp(x)
 	return iexp(x).Mul(fexp(x))
 }
 
