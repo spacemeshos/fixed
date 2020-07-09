@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const logEpsilon = 0.001
+const logEpsilon = 0.002
 
 func TestRandom_Log(t *testing.T) {
 	rand.Seed(42)
