@@ -7,9 +7,7 @@ import (
 const log2_E = int64(1442695) * (1 << fracBits) / int64(1000000) // log2(E)
 const log_2 = int64(693147) * (1 << fracBits) / int64(1000000)   // log(2)
 
-/*
-Log returns the natural logarithm of x
-*/
+// Log calculates the natural logarithm of x
 func Log(x Fixed) Fixed {
 	if x.int64 <= 0 {
 		panic(ErrOverflow)
@@ -21,6 +19,7 @@ func Log(x Fixed) Fixed {
 	return lg2(x.int64).Div(Fixed{log2_E})
 }
 
+// lg2 calculates log2(x)
 func lg2(x int64) Fixed {
 	// required x > 0
 	// 1 < fixed(x>>N) < 2

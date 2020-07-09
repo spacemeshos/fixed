@@ -15,18 +15,22 @@ var ErrOverflow = errors.New("overflow")
 
 // TODO: implement fmt.Formatter for %f and %g.
 
+// New creates Fixed from integer
 func New(i int) Fixed {
 	return Fixed{int64(i << fracBits)}
 }
 
+// From creates Fixed from float
 func From(f float64) Fixed {
 	return Fixed{int64(f * (1 << fracBits))}
 }
 
+// Raw creates Fixed from raw value
 func Raw(i int64) Fixed {
 	return Fixed{i}
 }
 
+// Float converts Fixed to float64
 func (x Fixed) Float() float64 {
 	return float64(x.int64) / (1 << fracBits)
 }
@@ -86,10 +90,13 @@ func (x Fixed) Ceil() int {
 	return int((x.int64 + oneValue - 1) >> fracBits)
 }
 
+// Value returns interval value
 func (x Fixed) Value() int64 {
 	return x.int64
 }
 
+// Mul returns x*y in fixed-point arithmetic.
+// Panics if overflows
 func (x Fixed) Mul(y Fixed) Fixed {
 	hi, lo := bits.Mul64(uint64(x.int64), uint64(y.int64))
 	hi = hi - uint64((x.int64>>63)&y.int64) - uint64((y.int64>>63)&x.int64)
@@ -101,7 +108,8 @@ func (x Fixed) Mul(y Fixed) Fixed {
 	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}
 }
 
-// Mul returns x*y in fixed-point arithmetic.
+// UnsafeMul returns x*y in fixed-point arithmetic.
+// Does not have overflow check
 func (x Fixed) UnsafeMul(y Fixed) Fixed {
 	hi, lo := bits.Mul64(uint64(x.int64), uint64(y.int64))
 	hi = hi - uint64((x.int64>>63)&y.int64) - uint64((y.int64>>63)&x.int64)
@@ -110,6 +118,8 @@ func (x Fixed) UnsafeMul(y Fixed) Fixed {
 	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}
 }
 
+// Div returns x/y in fixed-point arithmetic.
+// Panics if overflows
 func (x Fixed) Div(y Fixed) Fixed {
 	xs := x.int64 >> 63
 	ys := y.int64 >> 63
@@ -128,6 +138,8 @@ func (x Fixed) Div(y Fixed) Fixed {
 	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
 }
 
+// UsafeDiv returns x/y in fixed-point arithmetic.
+// Does not have overflow check (but bits.Div64 has it's own)
 func (x Fixed) UnsafeDiv(y Fixed) Fixed {
 	xs := x.int64 >> 63
 	ys := y.int64 >> 63
@@ -143,6 +155,8 @@ func (x Fixed) UnsafeDiv(y Fixed) Fixed {
 	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
 }
 
+// Add returns x+y in fixed-point arithmetic.
+// Panics if overflows
 func (x Fixed) Add(y Fixed) Fixed {
 	v := x.int64 + y.int64
 	if x.int64>>63 == y.int64>>63 && x.int64>>63 != int64(v)>>63 {
@@ -151,10 +165,14 @@ func (x Fixed) Add(y Fixed) Fixed {
 	return Fixed{int64(v)}
 }
 
+// UnsafeAdd returns x+y in fixed-point arithmetic.
+// Does not have overflow check
 func (x Fixed) UnsafeAdd(y Fixed) Fixed {
 	return Fixed{x.int64 + y.int64}
 }
 
+// Sub returns x-y in fixed-point arithmetic.
+// Panics if overflows
 func (x Fixed) Sub(y Fixed) Fixed {
 	v := x.int64 - y.int64
 	if x.int64>>63 != y.int64>>63 && x.int64>>63 != int64(v)>>63 {
@@ -163,6 +181,8 @@ func (x Fixed) Sub(y Fixed) Fixed {
 	return Fixed{int64(v)}
 }
 
+// UnsafeSub returns x-y in fixed-point arithmetic.
+// Does not have overflow check
 func (x Fixed) UnsafeSub(y Fixed) Fixed {
 	return Fixed{x.int64 - y.int64}
 }
