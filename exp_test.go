@@ -74,3 +74,15 @@ func BenchmarkFixed_NegExpRef(b *testing.B) {
 		Result = From(math.Exp(Fixed{-int64(i % 130000)}.Float()))
 	}
 }
+
+func BenchmarkFixed_FullExp(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Result = Exp(Fixed{int64(i)*(144000*2)/int64(b.N) - 144000 })
+	}
+}
+
+func BenchmarkFixed_FullExpRef(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Result = From(math.Exp(Fixed{int64(i)*(144000*2)/int64(b.N) - 144000 }.Float()))
+	}
+}
