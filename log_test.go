@@ -8,7 +8,7 @@ import (
 const logEpsilon = 0.001
 
 func TestRange_Log(t *testing.T) {
-	for i := 100; i < 1000000; i++ {
+	for i := 1; i < 1000000; i++ {
 		a := Fixed{int64(i)}
 		y := Log(a)
 		got := y.Float()

@@ -57,6 +57,10 @@ const (
 
 var format = fmt.Sprintf("%%s%%d+%%0%dd/%d", fracDecDigits, 1<<fracBits)
 
+func (x Fixed) Neg() Fixed {
+	return Fixed{-x.int64}
+}
+
 // String returns a human-readable representation of a fixed-point number.
 //
 // For example, the number one-and-a-quarter becomes "1+1024/4096" (the divisor is 2^precision).

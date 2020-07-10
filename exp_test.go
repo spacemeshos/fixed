@@ -5,6 +5,20 @@ import (
 	"testing"
 )
 
+func TestRange_NegExp(t *testing.T) {
+	for i := -144000; i < 1; i++ {
+		a := Fixed{int64(i)}
+		y := Exp(a)
+		got := y.Float()
+		want := math.Exp(Fixed{a.int64}.Float())
+		epsilon := 0.001
+		if got < want-epsilon || got > want+epsilon {
+			t.Errorf("exp(%v) => %v: got %v, want %v", a.Float(), y, got, want)
+			t.FailNow()
+		}
+	}
+}
+
 func TestRange_Exp(t *testing.T) {
 	for i := 1; i < 144000; i++ {
 		a := Fixed{int64(i)}
@@ -46,5 +60,17 @@ func BenchmarkFixed_Exp(b *testing.B) {
 func BenchmarkFixed_ExpRef(b *testing.B) {
 	for i := 1; i < b.N+1; i++ {
 		Result = From(math.Exp(Fixed{int64(i % 130000)}.Float()))
+	}
+}
+
+func BenchmarkFixed_NegExp(b *testing.B) {
+	for i := 1; i < b.N+1; i++ {
+		Result = Exp(Fixed{-int64(i % 130000)})
+	}
+}
+
+func BenchmarkFixed_NegExpRef(b *testing.B) {
+	for i := 1; i < b.N+1; i++ {
+		Result = From(math.Exp(Fixed{-int64(i % 130000)}.Float()))
 	}
 }

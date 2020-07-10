@@ -21,7 +21,7 @@ func Log(x Fixed) Fixed {
 		N := fracBits - bits.Len64(uint64(x.int64)) + 1
 		a := x.int64 << N // 1 <= a < 2
 		// (log(a<<n)/log(2)) - N
-		lg2 = Fixed{logApprox[a-oneValue]}.
+		lg2 = Fixed{int64(logApprox[a-oneValue])}.
 			Mul(invLog_2). // instead Div(Fixed{log_2})
 			Sub(Fixed{int64(N) << fracBits})
 	} else { // x >= 1
@@ -29,7 +29,7 @@ func Log(x Fixed) Fixed {
 		N := bits.Len64(uint64(x.int64)) - (fracBits + 1)
 		a := x.int64 >> N // 1 <= a < 2
 		// N + (log(a>>n)/log(2))
-		lg2 = Fixed{logApprox[a-oneValue]}.
+		lg2 = Fixed{int64(logApprox[a-oneValue])}.
 			Mul(invLog_2). // instead Div(Fixed{log_2})
 			Add(Fixed{int64(N) << fracBits})
 	}
