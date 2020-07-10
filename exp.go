@@ -5,7 +5,7 @@ const eValue = int64(2718281) * (1 << fracBits) / 1000000
 // Exp calculates e^x
 func Exp(x Fixed) Fixed {
 	if x.int64 < 0 {
-		// a = -1, e^a = 2^(log2(E)*a) = 2^(-i+f) = 2^f>>i
+		// a = -x, e^a = 2^(log2(E)*a) = 2^(-i+f) = 2^f>>i
 		n := Fixed{log2_E}.Mul(x.Neg()).int64
 		f := oneValue - n&fracMask
 		n += oneValue

@@ -6,7 +6,7 @@ import (
 )
 
 func TestRange_NegExp(t *testing.T) {
-	for i := -144000; i < 1; i++ {
+	for i := -144000; i <= 0; i++ {
 		a := Fixed{int64(i)}
 		y := Exp(a)
 		got := y.Float()
@@ -20,7 +20,7 @@ func TestRange_NegExp(t *testing.T) {
 }
 
 func TestRange_Exp(t *testing.T) {
-	for i := 1; i < 144000; i++ {
+	for i := 0; i < 144000; i++ {
 		a := Fixed{int64(i)}
 		y := Exp(a)
 		got := y.Float()
