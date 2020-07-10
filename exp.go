@@ -15,6 +15,9 @@ func fexp(x Fixed) Fixed {
 
 // iexp calculates e^x for integer part
 func iexp(x Fixed) Fixed {
+	if x.int64 > 144796 {
+		panic(ErrOverflow)
+	}
 	n := x.int64 >> fracBits
 	r := Fixed{oneValue}
 	if n == 0 {
@@ -26,12 +29,22 @@ func iexp(x Fixed) Fixed {
 	}
 	for i := 1; n > 0 && i < len(epow); i++ {
 		if n&1 == 1 {
-			r = r.Mul(Fixed{epow[i]})
+			r = r.UnsafeMul(Fixed{epow[i]})
 		}
 		n = n >> 1
 	}
-	if n > 0 {
-		panic(ErrOverflow)
-	}
 	return r
 }
+
+// FastExp calculates e^x fast but with lower precision
+//func FastExp(x Fixed) Fixed {
+//	// e^x = 2^(log2(e)*x)
+//	// log2(e)*x = i + f
+//	// e^x = 2^(i+f) = 2^f<<i
+//	n := Fixed{log2_E}.Mul(x)
+//	i := 62 - fracBits - int(n.int64>>fracBits)
+//	if i < 0 {
+//		panic(ErrOverflow)
+//	}
+//	return Fixed{pow2[n.int64&fracMask] >> i }
+//}
