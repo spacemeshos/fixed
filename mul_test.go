@@ -229,11 +229,9 @@ func TestFixedMulByOneMinusIota(t *testing.T) {
 	}
 }
 
-func (a Fixed) refMul(b Fixed) Fixed {
-	x := a.int64
-	y := b.int64
-	xw, yw := x>>fracBits, y>>fracBits     // Whole part of x and y.
-	xf, yf := x&fracMask, y&fracMask       // Fractional part of x and y.
+func (x Fixed) refMul(y Fixed) Fixed {
+	xw, yw := x.int64>>fracBits, y.int64>>fracBits     // Whole part of x and y.
+	xf, yf := x.int64&fracMask, y.int64&fracMask       // Fractional part of x and y.
 	ret := (xw * yw) << fracBits           // Multiply whole part.
 	ret += xw*yf + yw*xf                   // Multiply each whole by other fraction.
 	ret += (xf * yf) >> fracBits           // Multiply fractions by each other.
