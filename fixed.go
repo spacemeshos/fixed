@@ -16,7 +16,7 @@ var ErrOverflow = errors.New("overflow")
 
 // New creates Fixed from integer
 func New(i int) Fixed {
-	return Fixed{int64(i << fracBits)}
+	return Fixed{int64(i) << fracBits}
 }
 
 // From creates Fixed from float
