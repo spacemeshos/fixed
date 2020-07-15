@@ -17,7 +17,11 @@ var ErrOverflow = errors.New("overflow")
 
 // New creates Fixed from integer
 func New(i int) Fixed {
-	return Fixed{int64(i) << fracBits}
+	return Fixed{fixed(i)}
+}
+
+func fixed(i int) int64 {
+	return int64(i) << fracBits
 }
 
 // From creates Fixed from float
@@ -80,11 +84,19 @@ func (x Fixed) Floor() int {
 	return int(x.int64 >> fracBits)
 }
 
+func floor(x int64) int64 {
+	return x &^ fracMask
+}
+
 // Round returns the nearest integer value to x. Ties are rounded up.
 //
 // Its return type is int, not Fixed.
 func (x Fixed) Round() int {
 	return int((x.int64 + int64(roundValue)) >> fracBits)
+}
+
+func round(x int64) int64 {
+	return (x + int64(roundValue)) &^ fracMask
 }
 
 // Ceil returns the least integer value greater than or equal to x.

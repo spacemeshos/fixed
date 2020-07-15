@@ -1,7 +1,6 @@
 package fixed
 
 import (
-	"fmt"
 	"math"
 	"testing"
 )
@@ -48,72 +47,24 @@ func BenchmarkFixed_LogRef(b *testing.B) {
 	}
 }
 
-func Test_L(t *testing.T) {
-	q := 1 / math.Log2(math.E)
-	fmt.Printf("%v,%v,%d,%x",
-		q,
-		q*float64(uint64(1)<<54),
-		int64(q*float64(uint64(1)<<54)),
-		int64(q*float64(uint64(1)<<54)),
-	)
-}
-
-func Test_L1(t *testing.T) {
-	q := math.Log(2)
-	fmt.Printf("%v,%v,%d,%x",
-		q,
-		q*float64(uint64(1)<<54),
-		int64(q*float64(uint64(1)<<54)),
-		int64(q*float64(uint64(1)<<54)),
-	)
-}
-
-func Test_Y(t *testing.T) {
-	q := 1 / math.Log(2)
-	fmt.Printf("%v,%v,%d,%x\n",
-		q,
-		q*float64(uint64(1)<<54),
-		int64(q*float64(uint64(1)<<54)),
-		int64(q*float64(uint64(1)<<54)),
-	)
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<54)) >> (54 - fracBits)})
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<54)) >> (54 - fracBits)}.Float())
-}
-
-func Test_Z(t *testing.T) {
-	q := 90.253
-	z := fracBits
-	fmt.Printf("%v,%v,%d,%x\n",
-		q,
-		q*float64(uint64(1)<<z),
-		int64(q*float64(uint64(1)<<z)),
-		int64(q*float64(uint64(1)<<z)),
-	)
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<z)) >> (z - fracBits)})
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<z)) >> (z - fracBits)}.Float())
-	fmt.Println(Fixed{0x5a40c49b}.Float())
-}
-
-func Test_InvE(t *testing.T) {
-	q := 10.90051
-	fmt.Printf("%v,%v,%d,%x\n",
-		q,
-		q*float64(uint64(1)<<54),
-		int64(q*float64(uint64(1)<<54)),
-		int64(q*float64(uint64(1)<<54)),
-	)
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<54)) >> (54 - fracBits)})
-	fmt.Println(Fixed{int64(q*float64(uint64(1)<<54)) >> (54 - fracBits)}.Float())
-}
-
-func Test_Gr(t *testing.T) {
-	q := 10.90051
+/*
+func Test_Gen(t *testing.T) {
+	g := []float64 {
+		4.18938533204672725052e-01,  // 0x3FDACFE390C97D69
+		8.33333333333329678849e-02,  // 0x3FB555555555553B
+		-2.77777777728775536470e-03, // 0xBF66C16C16B02E5C
+		7.93650558643019558500e-04,  // 0x3F4A019F98CF38B6
+		-5.95187557450339963135e-04, // 0xBF4380CB8C0FE741
+		8.36339918996282139126e-04,  // 0x3F4B67BA4CDAD5D1
+		-1.63092934096575273989e-03, // 0xBF5AB89D0B9E43E4
+	}
 	//q := 0.6207822
-	fmt.Printf("%v,%v,%d,%x\n",
-		q,
-		q*float64(uint64(1)<<fracBits),
-		int64(q*float64(uint64(1)<<fracBits)),
-		int64(q*float64(uint64(1)<<fracBits)),
-	)
-	fmt.Println(Fixed{int64(q * float64(uint64(1)<<fracBits))}.Float())
+	for i,q := range g {
+		fmt.Printf("const g%d = %#x // %v\n",
+			i,
+			int64(q*float64(uint64(1)<<54)),
+			q,
+		)
+	}
 }
+*/

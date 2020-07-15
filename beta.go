@@ -1,69 +1,62 @@
 package fixed
 
 func BetaReg(a, b, x Fixed) Fixed {
+	return Fixed{beta(a.int64, b.int64, x.int64)}
+}
+
+func beta(a, b, x int64) int64 {
+	// (xᵃ*(1-x)ᵇ)/(a*B(a,b)) * (1/(1+(d₁/(1+(d₂/(1+...))))))
+	// (xᵃ*(1-x)ᵇ)/B(a,b) = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + a*log(x) + b*log(1-x))
+	// d_{2m+1} = -(a+m)(a+b+m)x/((a+2m)(a+2m+1))
+	// d_{2m}   = m(b-m)x/((a+2m-1)(a+2m))
 	bt := int64(0)
-	if x.int64 > 0 && x.int64 < oneValue {
-		invBetaLn := GammaLn(Fixed{a.int64 + b.int64}).int64 -
-			GammaLn(Fixed{a.int64}).int64 -
-			GammaLn(Fixed{b.int64}).int64
-		xab := Log(x).Mul(a).int64 + Log(Fixed{oneValue - x.int64}).Mul(b).int64
-		bt = Exp(Fixed{invBetaLn + xab}).int64
-	} else if x.int64 == 0 || x.int64 == oneValue {
-		return x
+	if 0 < x && x < oneValue {
+		bt = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + mul(log(x), a) + mul(log(oneValue-x), b))
+	} else if x < 0 || x > oneValue {
+		panic(ErrOverflow)
 	}
 
-	symm := x.int64 >= div(a.int64+oneValue, a.int64+b.int64+2)
-	if symm {
-		a, b, x = b, a, Fixed{oneValue - x.int64}
+	if x >= div(a+oneValue, a+b+oneValue+oneValue) {
+		// continued fraction after symmetry transform.
+		return oneValue - mulDiv(bt, betacf(oneValue-x, b, a), b)
+	}
+	return mulDiv(bt, betacf(x, a, b), a)
+}
+
+func betacf(x, a, b int64) int64 {
+	const iters = 31
+	const epsilon = int64(1)
+
+	nonzero := func(z int64) int64 {
+		const minval = oneValue >> 3
+		if abs(z) < minval {
+			return minval
+		}
+		return z
 	}
 
-	eps := int64(1)
-	fpmin := oneValue >> 3
-
-	qab := a.int64 + b.int64
-	qap := a.int64 + oneValue
-	qam := a.int64 - oneValue
 	c := oneValue
-	d := oneValue - mulDiv(qab, x.int64, qap)
-
-	if abs(d) < fpmin {
-		d = fpmin
-	}
-	d = div(oneValue, d)
+	d := div(oneValue, nonzero(oneValue-mulDiv(a+b, x, a+oneValue)))
 	h := d
+	for m := oneValue; m < fixed(iters); m += oneValue {
+		a_m2 := a + m + m
 
-	for m := oneValue; m < int64(31)<<fracBits; m += oneValue {
-		m2 := m << 1
-		aa := mulDiv(mul(m, (b.int64-m)), x.int64, mul(qam+m2, a.int64+m2))
-		d = oneValue + mul(aa, d)
-		if abs(d) < fpmin {
-			d = fpmin
-		}
-		c = oneValue + div(aa, c)
-		if abs(c) < fpmin {
-			c = fpmin
-		}
-		d = div(oneValue, d)
+		// d_{2m+1}
+		n := mulDiv(mul(m, b-m), x, mul(a_m2-oneValue, a_m2))
+		d = div(oneValue, nonzero(oneValue+mul(n, d)))
+		c = nonzero(oneValue + div(n, c))
 		h = mul(mul(h, d), c)
-		aa = mulDiv(mul(-a.int64-m, qab+m), x.int64, mul(a.int64+m2, qap+m2))
-		d = oneValue + mul(aa, d)
-		if abs(d) < fpmin {
-			d = fpmin
-		}
-		c = oneValue + div(aa, c)
-		if abs(c) < fpmin {
-			c = fpmin
-		}
-		d = div(oneValue, d)
+
+		// d_{2m}
+		n = mulDiv(mul(-a-m, a+b+m), x, mul(a_m2, a_m2+oneValue))
+		d = div(oneValue, nonzero(oneValue+mul(n, d)))
+		c = nonzero(oneValue + div(n, c))
+
 		del := mul(d, c)
 		h = mul(h, del)
-		if e := abs(del - oneValue); e <= eps {
-			break
+		if abs(del-oneValue) <= epsilon {
+			return h
 		}
 	}
-
-	if symm {
-		return Fixed{oneValue - mulDiv(bt, h, a.int64)}
-	}
-	return Fixed{mulDiv(bt, h, a.int64)}
+	panic(ErrOverflow)
 }

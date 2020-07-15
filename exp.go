@@ -14,24 +14,23 @@ var invX = []int64{
 	//	(int64(1)<<54)/479001600, // 1/12!
 }
 
-// Exp calculates e^x
-func Exp(x Fixed) Fixed {
+func exp(x int64) int64 {
 	// exp(x) = 1/exp(-x) when x < 0
 	// k = floor(x/ln(2)) => e^x = e^(ln(2)*k + (x - ln(2)*k)) = 2^k * e^(x-ln(2)*k)
 	// y = x-ln(2)*k => e^y = 1 + y + y^2/2 + y^3/6 + y^4/24 + y^5/120
 
-	if x.Floor() >= 27 {
+	if y := floor(x); y >= fixed(27) {
 		panic(ErrOverflow)
-	} else if x.Floor() <= -27 {
-		return Fixed{}
+	} else if y <= fixed(-27) {
+		return 0
 	}
 
-	xs := x.int64 >> 63
-	a := (x.int64 ^ xs) - xs // abs(x)
+	xs := x >> 63
+	a := (x ^ xs) - xs // abs(x)
 	a <<= (54 - fracBits)
 	invLog2 := int64(0x5c551d94ae0bf8)
 	t := mul54u(a, invLog2)
-	// k = floor(t)
+	// k = floor(t) with 54-bit frac
 	k := t &^ (int64(1)<<54 - 1)
 	log2 := int64(0x2c5c85fdf473de)
 	u := mul54u(k, log2)
@@ -52,7 +51,13 @@ func Exp(x Fixed) Fixed {
 	}
 
 	if xs != 0 {
-		return Fixed{oneValue}.Div(Fixed{int64(ey)})
+		return div(oneValue, ey)
 	}
-	return Fixed{int64(ey)}
+
+	return ey
+}
+
+// Exp calculates e^x
+func Exp(x Fixed) Fixed {
+	return Fixed{exp(x.int64)}
 }

@@ -1,7 +1,6 @@
 package fixed
 
 import (
-	"fmt"
 	"math"
 	"testing"
 )
@@ -79,27 +78,4 @@ func BenchmarkFixed_FullExpRef(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Result = From(math.Exp(Fixed{int64(i)*(144000*2)/int64(b.N) - 144000}.Float()))
 	}
-}
-
-func Test_ExpGen(t *testing.T) {
-	for i := 9; i >= 0; i-- {
-		q := math.Exp(-float64(int64(1) << i))
-		f, e := math.Frexp(q)
-		fmt.Printf("{0x%x, %4d}, // exp(-2^%d) => %v / 1<<%v\n", int64(f*float64(uint64(1)<<63)), -e, i, f, -e)
-	}
-	q := math.Exp(0)
-	f, e := math.Frexp(q)
-	fmt.Printf("{0x%x, %4d}, // exp(0) => %v * 1<<%v\n", int64(f*float64(uint64(1)<<63)), e, f, e)
-	for i := 0; i <= 9; i++ {
-		q := math.Exp(float64(int64(1) << i))
-		f, e := math.Frexp(q)
-		fmt.Printf("{0x%x, %4d}, // exp(2^%d) => %v * 1<<%v\n", int64(f*float64(uint64(1)<<63)), e, i, f, e)
-	}
-
-	for i := 1; i <= 9; i++ {
-		q := math.Exp(float64(1 / int64(1) << i))
-		f, e := math.Frexp(q)
-		fmt.Printf("{0x%x, %4d}, // exp(2^%d) => %v * 1<<%v\n", int64(f*float64(uint64(1)<<63)), e, i, f, e)
-	}
-
 }
