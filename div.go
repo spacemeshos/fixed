@@ -2,13 +2,11 @@ package fixed
 
 import "math/bits"
 
-// Div returns x/y in fixed-point arithmetic.
-// Panics if overflows
-func (x Fixed) Div(y Fixed) Fixed {
-	xs := x.int64 >> 63
-	ys := y.int64 >> 63
-	a := uint64((x.int64 ^ xs) - xs)        // abs
-	b := uint64((y.int64 ^ ys) - ys)        // abs
+func div(x, y int64) int64 {
+	xs := x >> 63
+	ys := y >> 63
+	a := uint64((x ^ xs) - xs)              // abs
+	b := uint64((y ^ ys) - ys)              // abs
 	hi, lo := a>>(64-fracBits), a<<fracBits // а*frac
 	// will panic when divides by zero or occurs overflow
 	v, rem := bits.Div64(hi, lo, b)
@@ -19,7 +17,13 @@ func (x Fixed) Div(y Fixed) Fixed {
 	if carry != 0 {
 		panic(ErrOverflow)
 	}
-	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
+	return int64(v) * ((xs^ys)*2 + 1)
+}
+
+// Div returns x/y in fixed-point arithmetic.
+// Panics if overflows
+func (x Fixed) Div(y Fixed) Fixed {
+	return Fixed{div(x.int64, y.int64)}
 }
 
 // UsafeDiv returns x/y in fixed-point arithmetic.
