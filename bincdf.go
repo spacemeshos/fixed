@@ -6,7 +6,7 @@ func BinCDF(n, p, x Fixed) Fixed {
 	} else if x.int64 >= n.int64 {
 		return One
 	} else {
-		k := Fixed{floor(x.int64)}
-		return BetaReg(n.Sub(k), k.Add(One), One.Sub(p))
+		k := floor(x.int64)
+		return Fixed{incomplete(n.int64-k, k+oneValue, oneValue-p.int64)}
 	}
 }

@@ -30,10 +30,10 @@ func log2(x int64) int64 {
 		hi, lo := bits.Mul64(a, a)
 		a = (hi << (64 - fracBits)) | (lo >> fracBits)
 		// c = (t+t).floor()&1 = (α^(t+t)>>1)&1 => 0 or 1
-		c := int(a >> (fracBits + 1))
+		c := int64(a >> (fracBits + 1))
 		// c == 1 when t+t >= 1
 		a = a >> c // a/2
-		b += int64(int(roundValue>>i) * c)
+		b += (oneHalf >> i) * c
 	}
 	return b
 }

@@ -26,7 +26,7 @@ var betaRegDat = []struct{ a, b, x, r float64 }{
 	{2.5, 2.5, 1.0, 1.0},
 }
 
-var betaEpsilon = 1 / (math.Pow(10, math.Floor(math.Log10(float64(oneValue>>5)))))
+var betaEpsilon = 1 / (math.Pow(10, math.Floor(math.Log10(float64(oneValue>>1)))))
 
 func TestFixed_BetaReg(t *testing.T) {
 	for i, tx := range betaRegDat {
@@ -34,7 +34,7 @@ func TestFixed_BetaReg(t *testing.T) {
 		got := y.Float()
 		want := tx.r
 		if got <= want-betaEpsilon || got >= want+betaEpsilon {
-			t.Errorf("%d: beta(%v,%v,%v) => %v: got %v, want %v | %v in (%v,%v)",
+			t.Errorf("%d: BetReg(%v,%v,%v) => %v: got %v, want %v | %v in (%v,%v)",
 				i, tx.a, tx.b, tx.x, y, got, want, From(want), want-betaEpsilon, want+betaEpsilon)
 			t.FailNow()
 		}

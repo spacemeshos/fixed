@@ -2,7 +2,7 @@ package fixed
 
 func lgamma(x int64) int64 {
 	t := log(x)
-	if x <= (oneValue << 1) {
+	if x <= 2*oneValue {
 		return lgamma(x+oneValue) - t
 	}
 	const g0 = 0x1acfe390c97d69 // 0.4189385332046727
@@ -15,7 +15,7 @@ func lgamma(x int64) int64 {
 	z := div(oneValue, x)
 	y := mul(z, z)
 	w := (g0 + mul(z, g1+mul(y, g2+mul(y, g3+mul(y, g4+mul(y, g5+mul(y, g6))))))) >> (54 - fracBits)
-	return mul((x-(oneValue>>1)), (t-oneValue)) + w
+	return mul(x-oneHalf, t-oneValue) + w
 }
 
 func Lgamma(x Fixed) Fixed {

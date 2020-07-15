@@ -57,6 +57,7 @@ const (
 	fracMask   int64  = int64(1)<<fracBits - 1
 	roundValue uint64 = uint64(1) << (fracBits - 1)
 	oneValue   int64  = int64(1) << fracBits
+	oneHalf    int64  = int64(1) << (fracBits - 1)
 )
 
 var format = fmt.Sprintf("%%s%%d+%%0%dd/%d", int(math.Log10(1<<fracBits))+1, 1<<fracBits)
