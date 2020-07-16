@@ -12,7 +12,7 @@ func lgamma(x int64) int64 {
 	const g4 = -0x9c065c607f3   // -0.00059518755745034
 	const g5 = 0xdb3dd266d6a    // 0.0008363399189962821
 	const g6 = -0x1ab89d0b9e43  // -0.0016309293409657527
-	z := div(oneValue, x)
+	z := inv(x)
 	y := mul(z, z)
 	w := (g0 + mul(z, g1+mul(y, g2+mul(y, g3+mul(y, g4+mul(y, g5+mul(y, g6))))))) >> (54 - fracBits)
 	return mul(x-oneHalf, t-oneValue) + w

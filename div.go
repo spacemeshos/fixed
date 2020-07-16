@@ -42,3 +42,20 @@ func (x Fixed) UnsafeDiv(y Fixed) Fixed {
 	v, _ = bits.Add64(v, (rem<<1)/b, 0)
 	return Fixed{int64(v) * ((xs^ys)*2 + 1)}
 }
+
+func inv(x int64) int64 {
+	xs := x >> 63
+	b := uint64((x ^ xs) - xs)                                                // abs
+	hi, lo := uint64(oneValue)>>(63-fracBits), uint64(oneValue)<<(fracBits+1) // 1*(frac+1)
+	// will panic when divides by zero or occurs overflow
+	v, _ := bits.Div64(hi, lo, b)
+	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
+	//                            (rem<<1)/b ∈ [0,1]
+	// round to near
+	v = (v + 1) >> 1
+	return int64(v) * (xs*2 + 1)
+}
+
+func (x Fixed) Inv() Fixed {
+	return Fixed{inv(x.int64)}
+}

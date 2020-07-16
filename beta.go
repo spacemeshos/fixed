@@ -36,20 +36,20 @@ func bcf(x, a, b int64) int64 {
 	}
 
 	c := oneValue
-	d := div(oneValue, nonzero(oneValue-mulDiv(a+b, x, a+oneValue)))
+	d := inv(nonzero(oneValue - mulDiv(a+b, x, a+oneValue)))
 	h := d
 	for m := oneValue; m < fixed(iters); m += oneValue {
 		a_m2 := a + m + m
 
 		// d_{2m}
 		n := mulDiv(mul(m, b-m), x, mul(a_m2-oneValue, a_m2))
-		d = div(oneValue, nonzero(oneValue+mul(n, d)))
+		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 		h = mul(mul(h, d), c)
 
 		// d_{2m+1}
 		n = mulDiv(mul(-a-m, a+b+m), x, mul(a_m2, a_m2+oneValue))
-		d = div(oneValue, nonzero(oneValue+mul(n, d)))
+		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 
 		del := mul(d, c)

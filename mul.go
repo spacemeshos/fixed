@@ -75,11 +75,3 @@ func mulDiv(a, b, c int64) int64 {
 func (x Fixed) MulDiv(y, d Fixed) Fixed {
 	return Fixed{mulDiv(x.int64, y.int64, d.int64)}
 }
-
-func OneMinusMulDiv(x, y, d Fixed) Fixed {
-	return Fixed{oneValue - mulDiv(x.int64, y.int64, d.int64)}
-}
-
-func OnePlusMulDiv(x, y, d Fixed) Fixed {
-	return Fixed{oneValue + mulDiv(x.int64, y.int64, d.int64)}
-}

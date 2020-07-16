@@ -51,7 +51,7 @@ func exp(x int64) int64 {
 	}
 
 	if xs != 0 {
-		return div(oneValue, ey)
+		return inv(ey)
 	}
 
 	return ey
