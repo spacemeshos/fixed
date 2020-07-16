@@ -24,6 +24,15 @@ func fixed(i int) int64 {
 	return int64(i) << fracBits
 }
 
+func Frac(i, f int) Fixed {
+	const inv10 = 0x6666666666666 // 0.1
+	v := fixed(i)
+	for ; f > 0; f-- {
+		v = mul54(v, inv10)
+	}
+	return Fixed{v}
+}
+
 // From creates Fixed from float
 func From(f float64) Fixed {
 	return Fixed{int64(f * (1 << fracBits))}
@@ -116,7 +125,7 @@ func (x Fixed) Value() int64 {
 // Panics if overflows
 func (x Fixed) Add(y Fixed) Fixed {
 	v := x.int64 + y.int64
-	if x.int64>>63 == y.int64>>63 && x.int64>>63 != int64(v)>>63 {
+	if x.int64>>63 == y.int64>>63 && x.int64>>63 != v>>63 {
 		panic(ErrOverflow)
 	}
 	return Fixed{v}
@@ -132,7 +141,7 @@ func (x Fixed) UnsafeAdd(y Fixed) Fixed {
 // Panics if overflows
 func (x Fixed) Sub(y Fixed) Fixed {
 	v := x.int64 - y.int64
-	if x.int64>>63 != y.int64>>63 && x.int64>>63 != int64(v)>>63 {
+	if x.int64>>63 != y.int64>>63 && x.int64>>63 != v>>63 {
 		panic(ErrOverflow)
 	}
 	return Fixed{v}
