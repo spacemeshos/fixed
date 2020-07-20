@@ -4,35 +4,61 @@ import (
 	"math/bits"
 )
 
-const log2_E = int64(1442695) * (1 << fracBits) / int64(1000000) // log2(E)
-const log_2 = int64(693147) * (1 << fracBits) / int64(1000000)   // log(2)
-var invLog_2 = Fixed{oneValue}.Div(Fixed{log_2})
-var invLog2_E = Fixed{oneValue}.Div(Fixed{log2_E})
+func log2(x int64) int64 {
+	var N int
+	var a uint64
+	var b int64
+	// log₂(x) = log₂(a*(2ᵇ)) = log₂(a) + b
+	if x < oneValue {
+		if x <= 0 {
+			// required x > 0
+			panic(ErrOverflow)
+		}
+		N = fracBits - bits.Len64(uint64(x)) + 1
+		a = uint64(x << N)
+		b = -(int64(N) << fracBits)
+	} else {
+		if x == oneValue {
+			return 0
+		}
+		N = bits.Len64(uint64(x)) - (fracBits + 1)
+		a = uint64(x >> N)
+		b = int64(N) << fracBits
+	}
+	// 1 <= a < 2, а = α^t, 0 <= t < 1 = > a*a = α^(t+t)
+	for i := 0; i < fracBits; i++ {
+		hi, lo := bits.Mul64(a, a)
+		a = (hi << (64 - fracBits)) | (lo >> fracBits)
+		// c = (t+t).floor()&1 = (α^(t+t)>>1)&1 => 0 or 1
+		c := int64(a >> (fracBits + 1))
+		// c == 1 when t+t >= 1
+		a = a >> c // a/2
+		b += (oneHalf >> i) * c
+	}
+	return b
+}
 
-// Log calculates the natural logarithm of x
+// Log2 returns log₂(x)
+func Log2(x Fixed) Fixed {
+	return Fixed{log2(x.int64)}
+}
+
+// returns regular fixed from regular fixed argument
+func log(x int64) int64 {
+	return mul56(log2(x), invLog2E)
+}
+
+// returns 56-bit precision fixed from regular fixed argument
+func log56(x int64) int64 {
+	return mul(log2(x), invLog2E)
+}
+
+// regular a * log(x) with internal 56-bit precision multiplication
+func alogx(x int64, a int64) int64 {
+	return mul56(mul(log2(x), invLog2E), a)
+}
+
+// Log returns Ln(x)
 func Log(x Fixed) Fixed {
-	// required x > 0
-	if x.int64 <= 0 {
-		panic(ErrOverflow)
-	}
-	var lg2 Fixed
-	if x.int64 < oneValue { // 0 < x < 1
-		// log2(x) = log2(x<<N / 2^N) = log2(x<<N) - N = (log(x<<N)/log(2)) - N
-		N := fracBits - bits.Len64(uint64(x.int64)) + 1
-		a := x.int64 << N // 1 <= a < 2
-		// (log(a<<n)/log(2)) - N
-		lg2 = Fixed{int64(logApprox[a-oneValue])}.
-			Mul(invLog_2). // instead Div(Fixed{log_2})
-			Sub(Fixed{int64(N) << fracBits})
-	} else { // x >= 1
-		// log2(x) = log2(2^N * x>>N) = N + log2(x>>N) = N + (log(x>>N)/log(2))
-		N := bits.Len64(uint64(x.int64)) - (fracBits + 1)
-		a := x.int64 >> N // 1 <= a < 2
-		// N + (log(a>>n)/log(2))
-		lg2 = Fixed{int64(logApprox[a-oneValue])}.
-			Mul(invLog_2). // instead Div(Fixed{log_2})
-			Add(Fixed{int64(N) << fracBits})
-	}
-	// log(x) = log2(x)/log2(E)
-	return lg2.Mul(invLog2_E) // instead lg2.Div(Fixed{log2_E})
+	return Fixed{log(x.int64)}
 }

@@ -1,41 +1,65 @@
 package fixed
 
-const eValue = int64(2718281) * (1 << fracBits) / 1000000
-
-// Exp calculates e^x
-func Exp(x Fixed) Fixed {
-	if x.int64 < 0 {
-		// when x < 0
-		// => e^x = 2^(log2(E)*x) = 2^(-i+f) = 2^f>>i = 2^expApprox[f] >> i
-		// 0 <= f < 4096
-		n := Fixed{log2_E}.Mul(x.Neg()).int64
-		f := oneValue - n&fracMask
-		n += oneValue
-		return Fixed{int64(pow2Approx[f]) >> (n >> fracBits)}
-	}
-	if x.int64 > 144796 {
-		panic(ErrOverflow)
-	}
-	// e^x = e^(i+f) = e^i*e^f => e^i*expApprox[f]
-	// 0 <= f < 4096
-	return iexp(x.int64 >> fracBits).Mul(Fixed{int64(expApprox[x.int64&fracMask])})
+var invX = []int64{
+	(int64(1) << 56) / 2,           // 1/2!
+	(int64(1) << 56) / 6,           // 1/3!
+	(int64(1) << 56) / 24,          // 1/4!
+	(int64(1) << 56) / 120,         // 1/5!
+	(int64(1) << 56) / 720,         // 1/6!
+	(int64(1) << 56) / 5040,        // 1/7!
+	(int64(1) << 56) / 40320,       // 1/8!
+	(int64(1) << 56) / 362880,      // 1/9!
+	(int64(1) << 56) / 3628800,     // 1/10!
+	(int64(1) << 56) / 39916800,    // 1/11!
+	(int64(1) << 56) / 479001600,   // 1/12!
+	(int64(1) << 56) / 6227020800,  // 1/13!
+	(int64(1) << 56) / 87178291200, // 1/14!
+	//(int64(1) << 56) / 6402373705728000, // 1/15!
 }
 
-// iexp calculates e^n for a positive integer part
-func iexp(n int64) Fixed {
-	r := Fixed{oneValue}
-	if n == 0 {
-		return r
+// max possible power of E for defined fractional size
+var maxEpow = floor(log(fixed(1 << (64 - fracBits - 2))))
+
+func exp(x int64) int64 {
+	// exp(x) = 1/exp(-x) when x < 0
+	// k = floor(x/ln(2)) => e^x = e^(ln(2)*k + (x - ln(2)*k)) = 2^k * e^(x-ln(2)*k)
+	// y = x-ln(2)*k => e^y = 1 + y + y^2/2 + y^3/6 + y^4/24 + y^5/120
+
+	if y := floor(x); y > maxEpow {
+		panic(ErrOverflow)
+	} else if y < -maxEpow {
+		return 0
 	}
-	e := Fixed{eValue}
-	if n == 1 {
-		return e
+
+	xs := x >> 63
+	a := fixed56((x ^ xs) - xs) // abs(x) -> 56-bit
+	t := mul56u(a, invLn2)
+	k := floor56(t)
+	u := mul56u(k, ln2)
+	k >>= 56 // truncate to integer
+	y := a - u
+	ey := (oneValue << (56 - fracBits)) + y
+	py := y
+
+	for _, j := range invX {
+		py = mul56u(py, y)
+		ey += mul56u(py, j)
 	}
-	for i := 1; n > 0 && i < len(epow); i++ {
-		if n&1 == 1 {
-			r = r.UnsafeMul(Fixed{epow[i]})
-		}
-		n = n >> 1
+
+	if int(k) < 56-fracBits {
+		ey >>= (56 - fracBits) - int(k)
+	} else {
+		ey <<= int(k) - (56 - fracBits)
 	}
-	return r
+
+	if xs != 0 {
+		return inv(ey)
+	}
+
+	return ey
+}
+
+// Exp calculates eˣ
+func Exp(x Fixed) Fixed {
+	return Fixed{exp(x.int64)}
 }
