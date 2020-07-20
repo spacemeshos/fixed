@@ -15,22 +15,21 @@ func log2(x int64) int64 {
 			panic(ErrOverflow)
 		}
 		N = fracBits - bits.Len64(uint64(x)) + 1
-		a = uint64(x << N)
 		b = -(int64(N) << fracBits)
 	} else {
 		if x == oneValue {
 			return 0
 		}
 		N = bits.Len64(uint64(x)) - (fracBits + 1)
-		a = uint64(x >> N)
 		b = int64(N) << fracBits
 	}
+	a = (uint64(x) << (64 - bits.Len64(uint64(x)))) >> 1
 	// 1 <= a < 2, а = α^t, 0 <= t < 1 = > a*a = α^(t+t)
 	for i := 0; i < fracBits; i++ {
 		hi, lo := bits.Mul64(a, a)
-		a = (hi << (64 - fracBits)) | (lo >> fracBits)
+		a = (hi << 2) | (lo >> 62)
 		// c = (t+t).floor()&1 = (α^(t+t)>>1)&1 => 0 or 1
-		c := int64(a >> (fracBits + 1))
+		c := int64(a >> 63)
 		// c == 1 when t+t >= 1
 		a = a >> c // a/2
 		b += (oneHalf >> i) * c
