@@ -1,7 +1,6 @@
 package fixed
 
 import (
-	"math"
 	"testing"
 )
 
@@ -26,7 +25,7 @@ var betaRegDat = []struct{ a, b, x, r float64 }{
 	{2.5, 2.5, 1.0, 1.0},
 }
 
-var betaEpsilon = 1 / (math.Pow(10, math.Floor(math.Log10(float64(oneValue>>1)))))
+var betaEpsilon = float(1 << 3)
 
 func TestFixed_BetaReg(t *testing.T) {
 	for i, tx := range betaRegDat {

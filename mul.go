@@ -29,32 +29,6 @@ func (x Fixed) UnsafeMul(y Fixed) Fixed {
 	return Fixed{int64(hi<<(64-fracBits) | (lo >> fracBits))}
 }
 
-func mul54(x, y int64) int64 {
-	hi, lo := bits.Mul64(uint64(x), uint64(y))
-	hi = hi - uint64((x>>63)&y) - uint64((y>>63)&x)
-	lo, carry := bits.Add64(lo, roundValue, 0)
-	hi, carry = bits.Add64(hi, 0, carry)
-	if carry != 0 || hi>>63 != hi>>(54-1)&1 {
-		panic(ErrOverflow)
-	}
-	return int64(hi<<10 | lo>>54)
-}
-
-func mul54s(x, y int64) int64 {
-	hi, lo := bits.Mul64(uint64(x), uint64(y))
-	hi = hi - uint64((x>>63)&y) - uint64((y>>63)&x)
-	return int64(hi<<10 | lo>>54)
-}
-
-func mul54u(x, y int64) int64 {
-	hi, lo := bits.Mul64(uint64(x), uint64(y))
-	return int64(hi<<10 | lo>>54)
-}
-
-func (x Fixed) Mul54(y int64) Fixed {
-	return Fixed{mul54(x.int64, y)}
-}
-
 func mulDiv(a, b, c int64) int64 {
 	hi, lo := bits.Mul64(uint64(a), uint64(b))
 	hi = hi - uint64((a>>63)&b) - uint64((b>>63)&a)

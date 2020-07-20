@@ -6,96 +6,10 @@ package fixed
 
 import (
 	"fmt"
+	"math/bits"
+	"math/rand"
 	"testing"
 )
-
-var testCases = []struct {
-	x     float64
-	s     map[string]string
-	floor int
-	round int
-	ceil  int
-}{{
-	x: 0,
-	s: map[string]string{
-		"26_6":  "0+00/64",
-		"40_24": "0+00000000/16777216",
-		"52_12": "0+0000/4096",
-	},
-	floor: 0,
-	round: 0,
-	ceil:  0,
-}, {
-	x: 1,
-	s: map[string]string{
-		"26_6":  "1+00/64",
-		"40_24": "1+00000000/16777216",
-		"52_12": "1+0000/4096",
-	},
-	floor: 1,
-	round: 1,
-	ceil:  1,
-}, {
-	x: 1.25,
-	s: map[string]string{
-		"26_6":  "1+16/64",
-		"40_24": "1+04194304/16777216",
-		"52_12": "1+1024/4096",
-	},
-	floor: 1,
-	round: 1,
-	ceil:  2,
-}, {
-	x: 2.5,
-	s: map[string]string{
-		"26_6":  "2+32/64",
-		"40_24": "2+08388608/16777216",
-		"52_12": "2+2048/4096",
-	},
-	floor: 2,
-	round: 3,
-	ceil:  3,
-}, {
-	x: 63 / 64.0,
-	s: map[string]string{
-		"26_6":  "0+63/64",
-		"40_24": "0+16515072/16777216",
-		"52_12": "0+4032/4096",
-	},
-	floor: 0,
-	round: 1,
-	ceil:  1,
-}, {
-	x: -0.5,
-	s: map[string]string{
-		"26_6":  "-0+32/64",
-		"40_24": "-0+08388608/16777216",
-		"52_12": "-0+2048/4096",
-	},
-	floor: -1,
-	round: +0,
-	ceil:  +0,
-}, {
-	x: -4.125,
-	s: map[string]string{
-		"26_6":  "-4+08/64",
-		"40_24": "-4+02097152/16777216",
-		"52_12": "-4+0512/4096",
-	},
-	floor: -5,
-	round: -4,
-	ceil:  -4,
-}, {
-	x: -7.75,
-	s: map[string]string{
-		"26_6":  "-7+48/64",
-		"40_24": "-7+12582912/16777216",
-		"52_12": "-7+3072/4096",
-	},
-	floor: -8,
-	round: -8,
-	ceil:  -7,
-}}
 
 func I(i int) Fixed {
 	return Fixed{int64(i)}
@@ -104,26 +18,61 @@ func I(i int) Fixed {
 func TestFixed(t *testing.T) {
 	one := Raw(oneValue)
 	for i, tc := range testCases {
-		x := From(tc.x)
 		s, found := tc.s[fmt.Sprintf("%d_%d", totalBits-fracBits, fracBits)]
-		if !found {
-			t.Logf("case #%d has no string representation for %d_%d", i, totalBits-fracBits, fracBits)
-		} else if got, want := x.String(), s; got != want {
-			t.Errorf("tc.x=%v: String: got %q, want %q", tc.x, got, want)
-		}
-		if got, want := x.Floor(), tc.floor; got != want {
-			t.Errorf("tc.x=%v: Floor: got %v, want %v", tc.x, got, want)
-		}
-		if got, want := x.Round(), tc.round; got != want {
-			t.Errorf("tc.x=%v: Round: got %v, want %v", tc.x, got, want)
-		}
-		if got, want := x.Ceil(), tc.ceil; got != want {
-			t.Errorf("tc.x=%v: Ceil: got %v, want %v", tc.x, got, want)
-		}
-		if got, want := x.Mul(one), x; got != want {
-			t.Errorf("tc.x=%v: Mul by one: got %v, want %v", tc.x, got, want)
+		if s == "overflow" {
+			func() {
+				defer func() { recover() }()
+				x := From(tc.x)
+				t.Errorf("tc.x=%v: From: got %v, want overflow", tc.x, x)
+			}()
+		} else {
+			x := From(tc.x)
+			if !found {
+				t.Logf("case #%d has no string representation for %d_%d", i, totalBits-fracBits, fracBits)
+			} else if got, want := x.String(), s; got != want {
+				t.Errorf("tc.x=%v: String: got %q, want %q", tc.x, got, want)
+			}
+			if got, want := x.Floor(), tc.floor; got != want {
+				t.Errorf("tc.x=%v: Floor: got %v, want %v", tc.x, got, want)
+			}
+			if got, want := x.Round(), tc.round; got != want {
+				t.Errorf("tc.x=%v: Round: got %v, want %v", tc.x, got, want)
+			}
+			if got, want := x.Ceil(), tc.ceil; got != want {
+				t.Errorf("tc.x=%v: Ceil: got %v, want %v", tc.x, got, want)
+			}
+			if got, want := x.Mul(one), x; got != want {
+				t.Errorf("tc.x=%v: Mul by one: got %v, want %v", tc.x, got, want)
+			}
 		}
 	}
+}
+
+func TestFixed_From(t *testing.T) {
+	f := func(v float64) int64 { return int64(v * float64(oneValue)) }
+	if got, want := From(1).int64, f(1); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	if got, want := From(0.5).int64, f(0.5); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	if got, want := From(1.000000000000313).int64, f(1.000000000000313); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	if got, want := From(3).int64, f(3); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	if got, want := From(300).int64, f(300); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	if got, want := From(3.128608483393691e-13).int64, f(3.128608483393691e-13); got != want {
+		t.Errorf("got {%v} != want {%v}", Fixed{got}, Fixed{want})
+	}
+	func() {
+		defer func() { recover() }()
+		x := From(8388607.9677419355)
+		t.Errorf("got %v, want overflow", x)
+	}()
 }
 
 //noinspection GoUnusedGlobalVariable
@@ -163,4 +112,61 @@ func BenchmarkFixed_Sub(b *testing.B) {
 		r = x.Sub(y)
 	}
 	Result = r
+}
+
+type accuracy struct {
+	min, max   int
+	avg, count float64
+	Epsilon    int64
+}
+
+func (acc *accuracy) update(got Fixed, fwant float64) bool {
+	epsilon := int64(0)
+	if acc.Epsilon == 0 {
+		epsilon = int64(1) << testEpsilonBits
+	} else {
+		epsilon = acc.Epsilon
+	}
+	want := From(fwant)
+	if sign(got.int64) != sign(want.int64) {
+		return false
+	}
+	x, y := uint64(abs(got.int64)), uint64(abs(want.int64))
+	a, b := bits.Len64(x), bits.Len64(y)
+	if a != b {
+		if b > a {
+			a = b
+		}
+	}
+	t := 0
+	for i := a - 1; i >= 0; i-- {
+		if (x>>i)&1 != (y>>i)&1 {
+			break
+		}
+		t++
+	}
+	if a < fracBits {
+		t = fracBits - a + t
+	}
+	if abs(got.int64-want.int64) > epsilon {
+		return false
+	}
+	if t > acc.max {
+		acc.max = t
+	}
+	if acc.min == 0 || acc.min > t {
+		acc.min = t
+	}
+	acc.avg += float64(t)
+	acc.count += 1
+	return true
+}
+
+func (acc accuracy) String() string {
+	return fmt.Sprintf("bits matched with stdlib float64{ max: %v min: %v, avg: %.2f }",
+		acc.max, acc.min, acc.avg/acc.count)
+}
+
+func randomFixed(i int64) int64 {
+	return i + rand.Int63n(oneValue)>>(fracBits-12)
 }

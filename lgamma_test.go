@@ -2,26 +2,27 @@ package fixed
 
 import (
 	"math"
+	"math/bits"
+	"math/rand"
 	"testing"
 )
 
-var gammaE = (math.Pow(10, math.Floor(math.Log10(float64(oneValue>>5)))))
-
 func Test_Lgamma(t *testing.T) {
-	for i := oneValue >> 1; i < 1000*oneValue; i += oneValue >> 3 {
-		a := Fixed{i}
-		y := Lgamma(a)
+	acc := accuracy{Epsilon: 64}
+	rand.Seed(43)
+	step := oneValue >> 16
+	for i := step; i < 100*oneValue; i += step {
+		a := randomFixed(i)
+		y := Lgamma(Fixed{a})
 		got := y.Float()
-		want, _ := math.Lgamma(a.Float())
-		gammaEpsilon := 1 / gammaE
-		if math.Abs(got) > 1 {
-			gammaEpsilon = math.Max(got/gammaE, gammaEpsilon)
-		}
-		if got < want-gammaEpsilon || got > want+gammaEpsilon {
-			t.Errorf("gamma(%v) => %v: got %v, want %v, eps: %v", a.Float(), y, got, want, gammaEpsilon)
+		want, _ := math.Lgamma(float(a))
+		acc.Epsilon = 1 << max(int64(bits.Len64(uint64(abs(y.int64)))-fracBits+2), 2)
+		if ok := acc.update(y, want); !ok {
+			t.Errorf("gamma(%v) => got %v|%v, want %v|%v", float(a), y, got, From(want), want)
 			t.FailNow()
 		}
 	}
+	t.Log(acc)
 }
 
 func BenchmarkFixed_LogGamma(b *testing.B) {

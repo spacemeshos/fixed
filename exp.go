@@ -1,53 +1,55 @@
 package fixed
 
 var invX = []int64{
-	(int64(1) << 54) / 2,    // 1/2!
-	(int64(1) << 54) / 6,    // 1/3!
-	(int64(1) << 54) / 24,   // 1/4!
-	(int64(1) << 54) / 120,  // 1/5!
-	(int64(1) << 54) / 720,  // 1/6!
-	(int64(1) << 54) / 5040, // 1/7!
-	//	(int64(1)<<54)/40320, // 1/8!
-	//	(int64(1)<<54)/362880, // 1/9!
-	//	(int64(1)<<54)/3628800, // 1/10!
-	//	(int64(1)<<54)/39916800, // 1/11!
-	//	(int64(1)<<54)/479001600, // 1/12!
+	(int64(1) << 56) / 2,           // 1/2!
+	(int64(1) << 56) / 6,           // 1/3!
+	(int64(1) << 56) / 24,          // 1/4!
+	(int64(1) << 56) / 120,         // 1/5!
+	(int64(1) << 56) / 720,         // 1/6!
+	(int64(1) << 56) / 5040,        // 1/7!
+	(int64(1) << 56) / 40320,       // 1/8!
+	(int64(1) << 56) / 362880,      // 1/9!
+	(int64(1) << 56) / 3628800,     // 1/10!
+	(int64(1) << 56) / 39916800,    // 1/11!
+	(int64(1) << 56) / 479001600,   // 1/12!
+	(int64(1) << 56) / 6227020800,  // 1/13!
+	(int64(1) << 56) / 87178291200, // 1/14!
+	//(int64(1) << 56) / 6402373705728000, // 1/15!
 }
+
+// max possible power of E for defined fractional size
+var maxEpow = floor(log(fixed(1 << (64 - fracBits - 2))))
 
 func exp(x int64) int64 {
 	// exp(x) = 1/exp(-x) when x < 0
 	// k = floor(x/ln(2)) => e^x = e^(ln(2)*k + (x - ln(2)*k)) = 2^k * e^(x-ln(2)*k)
 	// y = x-ln(2)*k => e^y = 1 + y + y^2/2 + y^3/6 + y^4/24 + y^5/120
 
-	if y := floor(x); y >= fixed(27) {
+	if y := floor(x); y > maxEpow {
 		panic(ErrOverflow)
-	} else if y <= fixed(-27) {
+	} else if y < -maxEpow {
 		return 0
 	}
 
 	xs := x >> 63
-	a := (x ^ xs) - xs // abs(x)
-	a <<= (54 - fracBits)
-	invLog2 := int64(0x5c551d94ae0bf8)
-	t := mul54u(a, invLog2)
-	// k = floor(t) with 54-bit frac
-	k := t &^ (int64(1)<<54 - 1)
-	log2 := int64(0x2c5c85fdf473de)
-	u := mul54u(k, log2)
-	k >>= 54
+	a := fixed56((x ^ xs) - xs) // abs(x) -> 56-bit
+	t := mul56u(a, invLn2)
+	k := floor56(t)
+	u := mul56u(k, ln2)
+	k >>= 56 // truncate to integer
 	y := a - u
-	ey := (oneValue << (54 - fracBits)) + y
+	ey := (oneValue << (56 - fracBits)) + y
 	py := y
 
 	for _, j := range invX {
-		py = mul54u(py, y)
-		ey += mul54u(py, j)
+		py = mul56u(py, y)
+		ey += mul56u(py, j)
 	}
 
-	if int(k) < 54-fracBits {
-		ey >>= (54 - fracBits) - int(k)
+	if int(k) < 56-fracBits {
+		ey >>= (56 - fracBits) - int(k)
 	} else {
-		ey <<= int(k) - (54 - fracBits)
+		ey <<= int(k) - (56 - fracBits)
 	}
 
 	if xs != 0 {
@@ -57,7 +59,7 @@ func exp(x int64) int64 {
 	return ey
 }
 
-// Exp calculates e^x
+// Exp calculates eˣ
 func Exp(x Fixed) Fixed {
 	return Fixed{exp(x.int64)}
 }

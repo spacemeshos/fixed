@@ -8,7 +8,7 @@ func log2(x int64) int64 {
 	var N int
 	var a uint64
 	var b int64
-	// log2(x) = log2(a*(2^b)) = log2(a) + b
+	// log₂(x) = log₂(a*(2ᵇ)) = log₂(a) + b
 	if x < oneValue {
 		if x <= 0 {
 			// required x > 0
@@ -26,7 +26,7 @@ func log2(x int64) int64 {
 		b = int64(N) << fracBits
 	}
 	// 1 <= a < 2, а = α^t, 0 <= t < 1 = > a*a = α^(t+t)
-	for i := 0; i < fracBits; i++ { // && a != 0 will slowdown code
+	for i := 0; i < fracBits; i++ {
 		hi, lo := bits.Mul64(a, a)
 		a = (hi << (64 - fracBits)) | (lo >> fracBits)
 		// c = (t+t).floor()&1 = (α^(t+t)>>1)&1 => 0 or 1
@@ -38,14 +38,27 @@ func log2(x int64) int64 {
 	return b
 }
 
+// Log2 returns log₂(x)
 func Log2(x Fixed) Fixed {
 	return Fixed{log2(x.int64)}
 }
 
+// returns regular fixed from regular fixed argument
 func log(x int64) int64 {
-	return mul54(log2(x), 0x2c5c85fdf473de)
+	return mul56(log2(x), invLog2E)
 }
 
+// returns 56-bit precision fixed from regular fixed argument
+func log56(x int64) int64 {
+	return mul(log2(x), invLog2E)
+}
+
+// regular a * log(x) with internal 56-bit precision multiplication
+func alogx(x int64, a int64) int64 {
+	return mul56(mul(log2(x), invLog2E), a)
+}
+
+// Log returns Ln(x)
 func Log(x Fixed) Fixed {
 	return Fixed{log(x.int64)}
 }

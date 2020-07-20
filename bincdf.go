@@ -1,5 +1,6 @@
 package fixed
 
+// BinCDF calculates Bernoulli cumulative distribution function
 func BinCDF(n, p, x Fixed) Fixed {
 	if x.int64 < 0 {
 		return Fixed{}

@@ -6,5 +6,5 @@ import (
 )
 
 func TestFixed_BinCDF(t *testing.T) {
-	fmt.Printf("%.8f\n", BinCDF(New(34), Frac(9, 1), New(25)).Float())
+	fmt.Printf("%.10f\n", BinCDF(New(34), From(0.9), New(25)).Float())
 }
