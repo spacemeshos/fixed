@@ -1,7 +1,7 @@
 import os
 import math
 
-precisions = [12, 24, 32, 40, 52]
+precisions = [12, 24, 32, 40, 48, 52]
 
 
 def mul(a, b, prec):

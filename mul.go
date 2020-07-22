@@ -1,13 +1,15 @@
 package fixed
 
-import "math/bits"
+import (
+	"math/bits"
+)
 
 func mul(x, y int64) int64 {
 	hi, lo := bits.Mul64(uint64(x), uint64(y))
 	hi = hi - uint64((x>>63)&y) - uint64((y>>63)&x)
 	lo, carry := bits.Add64(lo, roundValue, 0)
 	hi, carry = bits.Add64(hi, 0, carry)
-	if carry != 0 || hi>>63 != hi>>(fracBits-1)&1 {
+	if carry != 0 || int64(hi)>>63 != int64(hi)>>(fracBits-1) {
 		panic(ErrOverflow)
 	}
 	return int64(hi<<(64-fracBits) | (lo >> fracBits))
@@ -30,22 +32,45 @@ func (x Fixed) UnsafeMul(y Fixed) Fixed {
 }
 
 func mulDiv(a, b, c int64) int64 {
-	hi, lo := bits.Mul64(uint64(a), uint64(b))
-	hi = hi - uint64((a>>63)&b) - uint64((b>>63)&a)
-	xs := int64(hi) >> 63
-	ys := c >> 63
-	y := uint64((c ^ ys) - ys)
-	lo, borrow := bits.Sub64(lo^uint64(xs), uint64(xs), 0)
-	hi, _ = bits.Sub64(hi^uint64(xs), uint64(xs), borrow)
-	// will panic when divides by zero or occurs overflow
-	v, rem := bits.Div64(hi, lo, y)
-	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
-	//                            (rem<<1)/b ∈ [0,1]
-	// round to near
-	v, _ = bits.Add64(v, (rem<<1)/y, 0)
-	return int64(v) * ((xs^ys)*2 + 1)
+	return div(mul(a, b), c)
 }
 
 func (x Fixed) MulDiv(y, d Fixed) Fixed {
 	return Fixed{mulDiv(x.int64, y.int64, d.int64)}
+}
+
+func mul2div(a, b, x, y int64) int64 {
+	// a * b
+	hi, li := bits.Mul64(uint64(a), uint64(b))
+	hi = hi - uint64((a>>63)&b) - uint64((b>>63)&a)
+
+	// x * y
+	hj, lj := bits.Mul64(uint64(x), uint64(y))
+	hj = hj - uint64((x>>63)&y) - uint64((y>>63)&x)
+
+	// signs
+	si := int64(hi) >> 63 // sign i
+	sj := int64(hj) >> 63 // sign j
+
+	// abs(a*b)
+	li, borrow := bits.Sub64(li^uint64(si), uint64(si), 0)
+	hi, _ = bits.Sub64(hi^uint64(si), uint64(si), borrow)
+
+	// use all most significant bits of result
+	z := bits.Len64(uint64((int64(hj) ^ sj) - sj)) // z < 64
+	if z <= fracBits {
+		z = fracBits
+	} else {
+		li = hi<<(64-z+fracBits) | li>>(z-fracBits)
+		hi = hi >> (z - fracBits)
+	}
+
+	// abs(x*y)
+	d := uint64(abs(int64(hj<<(64-z) | lj>>z)))
+	v, rem := bits.Div64(hi, li, d)
+
+	// TODO
+	v, _ = bits.Add64(v, (rem<<1)/d, 0)
+
+	return int64(v) * ((si^sj)*2 + 1)
 }
