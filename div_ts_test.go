@@ -7,8 +7,8 @@ var divTestCases = []struct {
 	s map[string]string
 }{
 	{
-		x: 2.0,
-		y: 3.0,
+		x: 2,
+		y: 3,
 		z: 0.6666666666666666,
 		s: map[string]string{
 			"52_12": "0+aab/12",
@@ -20,8 +20,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 1.0,
-		y: 3.0,
+		x: 1,
+		y: 3,
 		z: 0.3333333333333333,
 		s: map[string]string{
 			"52_12": "0+555/12",
@@ -33,8 +33,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 10.0,
-		y: 7.0,
+		x: 10,
+		y: 7,
 		z: 1.4285714285714286,
 		s: map[string]string{
 			"52_12": "1+6db/12",
@@ -46,8 +46,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 18.0,
-		y: 7.0,
+		x: 18,
+		y: 7,
 		z: 2.5714285714285716,
 		s: map[string]string{
 			"52_12": "2+925/12",
@@ -59,8 +59,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 2251799813685247.0,
-		y: 31.0,
+		x: 2251799813685247,
+		y: 31,
 		z: 72638703667266.03,
 		s: map[string]string{
 			"52_12": "overflow",
@@ -72,8 +72,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 549755813887.0,
-		y: 31.0,
+		x: 549755813887,
+		y: 31,
 		z: 17734058512.48387,
 		s: map[string]string{
 			"52_12": "17734058512+7be/12",
@@ -85,8 +85,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 2147483647.0,
-		y: 31.0,
+		x: 2147483647,
+		y: 31,
 		z: 69273666.03225806,
 		s: map[string]string{
 			"52_12": "69273666+084/12",
@@ -98,8 +98,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 8388607.0,
-		y: 31.0,
+		x: 8388607,
+		y: 31,
 		z: 270600.22580645164,
 		s: map[string]string{
 			"52_12": "270600+39d/12",
@@ -111,8 +111,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 32767.0,
-		y: 31.0,
+		x: 32767,
+		y: 31,
 		z: 1057.0,
 		s: map[string]string{
 			"52_12": "1057+000/12",
@@ -124,8 +124,8 @@ var divTestCases = []struct {
 		},
 	},
 	{
-		x: 2047.0,
-		y: 31.0,
+		x: 2047,
+		y: 31,
 		z: 66.03225806451613,
 		s: map[string]string{
 			"52_12": "66+084/12",

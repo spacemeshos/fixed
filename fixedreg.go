@@ -21,8 +21,6 @@ const (
 	testEpsilonBits int = 3
 )
 
-// 0.0126157505
-
 // convert integer to fixed with fraction defined as fracBits
 func fixed(i int) int64 {
 	if abs(int64(i)) >= (int64(1)<<(63-fracBits))-1 {

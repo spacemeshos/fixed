@@ -4,6 +4,7 @@
 
 // Package fixed implements fixed-point integer types.
 package fixed // import "github.com/spacemeshos/fixed"
+import "encoding/binary"
 
 // Fixed is a signed fixed-point number.
 type Fixed struct {
@@ -23,6 +24,33 @@ func From(f float64) Fixed {
 // Raw creates Fixed from raw value
 func Raw(i int64) Fixed {
 	return Fixed{i}
+}
+
+// DivUint64 creates new Fixed equal to p/q unsigned result
+func DivUint64(p, q uint64) Fixed {
+	return Fixed{udiv(p, q)}
+}
+
+// Div64 creates new Fixed equal to p/q signed result
+func Div64(p, q int64) Fixed {
+	return Fixed{div(p, q)}
+}
+
+// FracFromBytes takes only fractional part from bytes array and return fixed value
+func FracFromBytes(x []byte) Fixed {
+	return Fixed{int64(binary.LittleEndian.Uint64(x)) & fracMask}
+}
+
+// FromBytes creates fixed value from bytes array
+func FromBytes(x []byte) Fixed {
+	return Fixed{int64(binary.LittleEndian.Uint64(x))}
+}
+
+// Bytes converts fixed value into bytes array
+func (x Fixed) Bytes() []byte {
+	b := [8]byte{}
+	binary.LittleEndian.PutUint64(b[:], uint64(x.int64))
+	return b[:]
 }
 
 // Float converts Fixed to float64
@@ -103,4 +131,19 @@ func (x Fixed) UnsafeSub(y Fixed) Fixed {
 // Abs returns absolute value of the fixed-point number
 func (x Fixed) Abs() Fixed {
 	return Fixed{abs(x.int64)}
+}
+
+// LessThan compares fixed values abd returns true if x > y
+func (x Fixed) LessThan(y Fixed) bool {
+	return x.int64 < y.int64
+}
+
+// GreaterThan compares fixed values abd returns true if x < y
+func (x Fixed) GreaterThan(y Fixed) bool {
+	return x.int64 > y.int64
+}
+
+// EqualTo compares fixed values abd returns true if x == y
+func (x Fixed) EqualTo(y Fixed) bool {
+	return x.int64 == y.int64
 }

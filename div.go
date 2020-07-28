@@ -2,23 +2,27 @@ package fixed
 
 import "math/bits"
 
+func udiv(x, y uint64) int64 {
+	hi, lo := x>>(64-fracBits), x<<fracBits // а*frac
+	// will panic when divides by zero or occurs overflow
+	v, rem := bits.Div64(hi, lo, y)
+	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
+	//                            (rem<<1)/b ∈ [0,1]
+	// round to near
+	v, carry := bits.Add64(v, (rem<<1)/y, 0)
+	if carry != 0 {
+		panic(ErrOverflow)
+	}
+	return int64(v)
+}
+
 func div(x, y int64) int64 {
 	xs := x >> 63
 	ys := y >> 63
 	a := uint64((x ^ xs) - xs) // abs
 	b := uint64((y ^ ys) - ys) // abs
 
-	hi, lo := a>>(64-fracBits), a<<fracBits // а*frac
-	// will panic when divides by zero or occurs overflow
-	v, rem := bits.Div64(hi, lo, b)
-	// rem < b && (b>>63) == 0 => (rem<<1) < ^uint64(0)
-	//                            (rem<<1)/b ∈ [0,1]
-	// round to near
-	v, carry := bits.Add64(v, (rem<<1)/b, 0)
-	if carry != 0 {
-		panic(ErrOverflow)
-	}
-	return int64(v) * ((xs^ys)*2 + 1)
+	return udiv(a, b) * ((xs^ys)*2 + 1)
 }
 
 // Div returns x/y in fixed-point arithmetic.
