@@ -143,7 +143,7 @@ func (x Fixed) GreaterThan(y Fixed) bool {
 	return x.int64 > y.int64
 }
 
-// EqualTo compares fixed values abd returns true if x == y
+// EqualTo compares fixed values and returns true if x == y
 func (x Fixed) EqualTo(y Fixed) bool {
 	return x.int64 == y.int64
 }
