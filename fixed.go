@@ -133,7 +133,7 @@ func (x Fixed) Abs() Fixed {
 	return Fixed{abs(x.int64)}
 }
 
-// LessThan compares fixed values abd returns true if x > y
+// LessThan compares fixed values and returns true if x < y
 func (x Fixed) LessThan(y Fixed) bool {
 	return x.int64 < y.int64
 }
