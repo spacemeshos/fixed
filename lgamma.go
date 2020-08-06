@@ -6,7 +6,7 @@ func lgamma(x int64) int64 {
 		switch {
 		case x <= 0:
 			panic(ErrOverflow)
-		case x == 1, x == 2:
+		case x == oneValue, x == 2*oneValue:
 			return 0
 		default:
 			return lgamma(x+oneValue) - log(x)
