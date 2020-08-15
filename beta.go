@@ -25,11 +25,11 @@ func incomplete(a, b, x int64) int64 {
 }
 
 func bcf(x, a, b int64) int64 {
-	const iters = 31
+	const iters = 121
 	const epsilon = int64(1)
 
 	nonzero := func(z int64) int64 {
-		const minval = int64(1) << 4
+		const minval = int64(1)
 		if abs(z) < minval {
 			return minval
 		}
@@ -43,13 +43,13 @@ func bcf(x, a, b int64) int64 {
 		a_m2 := a + m + m
 
 		// d_{2m}
-		n := mulDiv(mul(m, b-m), x, mul(a_m2-oneValue, a_m2))
+		n := mulDiv(mul(x, b-m), m, mul(a_m2-oneValue, a_m2))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 		h = mul(mul(h, d), c)
 
 		// d_{2m+1}
-		n = mulDiv(mul(-a-m, a+b+m), x, mul(a_m2, a_m2+oneValue))
+		n = mulDiv(mul(x, a+b+m), -a-m, mul(a_m2, a_m2+oneValue))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 

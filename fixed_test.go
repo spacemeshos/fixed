@@ -75,6 +75,27 @@ func TestFixed_From(t *testing.T) {
 	}()
 }
 
+func TestFixed_Bytes(t *testing.T) {
+	rand.Seed(42)
+	for i := 0; i < 100; i++ {
+		v := rand.Int63()
+		if rand.Float64() < 0.5 {
+			v = -v
+		}
+		b := Fixed{v}.Bytes()
+		a := FromBytes(b)
+		if a.int64 != v {
+			t.Errorf("got {%v} != want {%v}", a, Fixed{v})
+			t.FailNow()
+		}
+		a = FracFromBytes(b)
+		if a.int64 != v&fracMask {
+			t.Errorf("got {%v} != want {%v}", a, Fixed{v & fracMask})
+			t.FailNow()
+		}
+	}
+}
+
 //noinspection GoUnusedGlobalVariable
 var Result Fixed
 

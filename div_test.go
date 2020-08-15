@@ -22,7 +22,11 @@ func Fixed_Div_(t *testing.T, div func(a, b Fixed) Fixed) {
 				x, y := New(tc.x), New(tc.y)
 				got := x.Div(y).String()
 				if got != s {
-					t.Errorf("Div: %s, want: %s, %v/%v", got, s, tc.x, tc.y)
+					t.Errorf("x.Div(y): %s, want: %s, %v/%v", got, s, tc.x, tc.y)
+				}
+				got = Div64(int64(tc.x), int64(tc.y)).String()
+				if got != s {
+					t.Errorf("fixed.Div64(p,q): %s, want: %s, %v/%v", got, s, tc.x, tc.y)
 				}
 			}
 		}

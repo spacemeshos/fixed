@@ -1,7 +1,7 @@
 import os
 import math
 
-precisions = [12, 24, 32, 40, 52]
+precisions = [12, 24, 32, 40, 48, 52]
 
 
 def mul(a, b, prec):
@@ -126,7 +126,7 @@ var divTestCases = []struct {
 {{
     x: {:1},
     y: {:2},
-    z: {:3},'''.format(a, b, a/b))
+    z: {:3},'''.format(int(a), int(b), a/b))
         f.write('''
     s: map[string]string{''')
         for i in precisions:
