@@ -11,7 +11,7 @@ import (
 var ErrOverflow = errors.New("overflow")
 
 const (
-	fracBits   int    = 48 // 16.48
+	fracBits   int    = 40 // 24.40
 	totalBits  int    = 64
 	fracMask   int64  = (int64(1) << fracBits) - 1
 	roundValue uint64 = uint64(1) << (fracBits - 1)
