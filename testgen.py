@@ -1,5 +1,7 @@
 import os
 import math
+import scipy.stats
+import random
 
 precisions = [12, 24, 32, 40, 48, 52]
 
@@ -197,7 +199,74 @@ var testCases = []struct {
     os.rename('fixed_ts_test.go1', 'fixed_ts_test.go')
 
 
+def gen_bincdf_tests():
+
+    f = open('bincdf_ts_test.go1', 'w+')
+    f.write('''
+package fixed
+
+var bincdfTestCases = []struct {
+    n,x int
+    p,cdf float64
+    s map[string]string
+}{''')
+
+    def case(n,x,p):
+        n = int(n)
+        x = int(x)
+        p = float(p)
+
+        cdf = scipy.stats.binom.cdf(x, n, p)
+        print(cdf, x,n,p)
+        if math.isnan(cdf):
+            return
+
+        f.write('''
+{{
+    n: {:1},
+    x: {:2},
+    p: {:3},
+    cdf: {:4},'''.format(n,x,p,cdf))
+        f.write('''
+    s: map[string]string{''')
+        for i in precisions:
+            if string(fixed(n,i),i) == "overflow" or string(fixed(x,i),i) == "overflow" or string(fixed(p,i),i) == "overflow":
+                r = "overflow"
+            else:
+                r = string(fixed(cdf, i), i)
+            #print(r)
+            f.write('''
+        "{:1}_{:2}":"{:3}",'''.format(64 - i, i, r))
+        f.write('''
+    },
+},''')
+
+    random.seed(42)
+
+    def q(n):
+        x = n//10
+        case(n, x, 0.1)
+        x = n//2
+        case(n, x, 0.5)
+        x = n-n//10
+        case(n, x, 0.9)
+
+    for i in precisions:
+        for k in range(5):
+            N = (1 << (64-i-1))-1
+            q(N)
+            n = random.randint(N//3,N)
+            q(n)
+
+    f.write('}\n')
+    f.close()
+    if os.path.isfile('bincdf_ts_test.go'):
+        os.remove('bincdf_ts_test.go')
+    os.rename('bincdf_ts_test.go1', 'bincdf_ts_test.go')
+
+
 if __name__ == '__main__':
     gen_mul_tests()
     gen_div_tests()
     gen_fixed_tests()
+    gen_bincdf_tests()

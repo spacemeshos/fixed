@@ -136,7 +136,8 @@ func BenchmarkFixed_Sub(b *testing.B) {
 }
 
 type accuracy struct {
-	min, max   int
+	min, max int
+	emax, emin, eavg float64
 	avg, count float64
 	Epsilon    int64
 }
@@ -175,17 +176,26 @@ func (acc *accuracy) update(got Fixed, fwant float64) bool {
 	if t > acc.max {
 		acc.max = t
 	}
-	if acc.min == 0 || acc.min > t {
+	if acc.count == 0 || acc.min > t {
 		acc.min = t
 	}
+	e := float64(abs(got.int64-want.int64))/float64(oneValue)
+	if e > acc.emax {
+		acc.emax = e
+	}
+	if acc.count == 0 || acc.emin > e {
+		acc.emin = e
+	}
+	acc.eavg += e
 	acc.avg += float64(t)
 	acc.count += 1
 	return true
 }
 
 func (acc accuracy) String() string {
-	return fmt.Sprintf("bits matched with stdlib float64{ max: %v min: %v, avg: %.2f }",
-		acc.max, acc.min, acc.avg/acc.count)
+	return fmt.Sprintf("matched { bits max: %v min: %v, avg: %.2f || epsilon max: %.8g min: %.8g, avg: %.8g }",
+		acc.max, acc.min, acc.avg/acc.count,
+		acc.emax, acc.emin, acc.eavg/acc.count)
 }
 
 func randomFixed(i int64) int64 {
