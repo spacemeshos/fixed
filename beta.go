@@ -33,7 +33,7 @@ func incomplete(a, b, x int64) int64 {
 }
 
 func bcf(x, a, b int64) int64 {
-	const iters = 300
+	const iters = 1300
 	const epsilon = int64(1)
 
 	nonzero := func(z int64) int64 {
@@ -54,14 +54,14 @@ func bcf(x, a, b int64) int64 {
 		// => d_{2m} and d_{2m+1} < max fixed value
 
 		// d_{2m} = m(b-m)x/((a+2m-1)(a+2m)) = m/(a+2m) * (b-m)/(a+2m-1) * x
-		n := mul(mul(div(m,a_m2), div(b-m,a_m2-oneValue)),x)
+		n := mul(div(mul(m,x),a_m2), div(b-m,a_m2-oneValue))
 		//n := mulDiv(mul(x, b-m), m, mul(a_m2-oneValue, a_m2))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 		h = mul(mul(h, d), c)
 
 		// d_{2m+1} = -(a+m)(a+b+m)x/((a+2m)(a+2m+1)) = (a+m)/(a+2m) * (a+b+m)/(a+2m+1) * -x
-		n = mul(mul(div(a+m,a_m2), div(a+b+m,a_m2+oneValue)), -x)
+		n = mul(div(mul(a+m,-x),a_m2), div(a+b+m,a_m2+oneValue))
 		//n = mulDiv(mul(x, a+b+m), -a-m, mul(a_m2, a_m2+oneValue))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
