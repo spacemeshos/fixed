@@ -3,7 +3,7 @@ import math
 import scipy.stats
 import random
 
-precisions = [12, 24, 32, 40, 48, 52]
+precisions = [12, 24, 32, 40, 44, 48, 52]
 
 
 def mul(a, b, prec):
@@ -217,7 +217,7 @@ var bincdfTestCases = []struct {
         p = float(p)
 
         cdf = scipy.stats.binom.cdf(x, n, p)
-        print(cdf, x,n,p)
+        #print(cdf, x,n,p)
         if math.isnan(cdf):
             return
 
@@ -252,10 +252,10 @@ var bincdfTestCases = []struct {
         case(n, x, 0.9)
 
     for i in precisions:
-        for k in range(5):
-            N = (1 << (64-i-1))-1
-            q(N)
-            n = random.randint(N//3,N)
+        N = (1 << (64-i-1))-1
+        q(N)
+        for k in range(25):
+            n = random.randint(N>>8,N-1)
             q(n)
 
     f.write('}\n')

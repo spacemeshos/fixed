@@ -23,8 +23,8 @@ func mul56(x, y int64) int64 {
 	hi, lo := bits.Mul64(uint64(x), uint64(y))
 	hi = hi - uint64((x>>63)&y) - uint64((y>>63)&x)
 	lo, carry := bits.Add64(lo, roundValue56, 0)
-	hi, carry = bits.Add64(hi, 0, carry)
-	if carry != 0 || int64(hi)>>63 != int64(hi)>>55 {
+	hi, _ = bits.Add64(hi, 0, carry)
+	if int64(hi)>>63 != int64(hi)>>55 {
 		panic(ErrOverflow)
 	}
 	return int64(hi<<8 | lo>>56)

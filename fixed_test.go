@@ -193,7 +193,7 @@ func (acc *accuracy) update(got Fixed, fwant float64) bool {
 }
 
 func (acc accuracy) String() string {
-	return fmt.Sprintf("matched { bits max: %v min: %v, avg: %.2f || epsilon max: %.8g min: %.8g, avg: %.8g }",
+	return fmt.Sprintf("matched { bits max: %v min: %v, avg: %.2f || epsilon max: %.3g min: %.3g, avg: %.3g }",
 		acc.max, acc.min, acc.avg/acc.count,
 		acc.emax, acc.emin, acc.eavg/acc.count)
 }

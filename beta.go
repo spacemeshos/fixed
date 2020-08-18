@@ -25,13 +25,15 @@ func incomplete(a, b, x int64) int64 {
 
 	if x >= div(a+oneValue, a+b+oneValue+oneValue) {
 		// symmetry transform
-		return oneValue - mulDiv(bt, bcf(oneValue-x, b, a), b)
+		return oneValue - mul( bcf(oneValue-x, b, a), div(bt, b) )
+		//return oneValue - mulDiv(bt, bcf(oneValue-x, b, a), b)
 	}
-	return mulDiv(bt, bcf(x, a, b), a)
+	return mul( bcf(x, a, b), div(bt, a) )
+	//return mulDiv(bt, bcf(x, a, b), a)
 }
 
 func bcf(x, a, b int64) int64 {
-	const iters = 1000
+	const iters = 300
 	const epsilon = int64(1)
 
 	nonzero := func(z int64) int64 {
@@ -68,9 +70,6 @@ func bcf(x, a, b int64) int64 {
 		h = mul(h, del)
 		if abs(del-oneValue) <= epsilon {
 			return h
-		}
-		if m + oneValue == fixed(iters) {
-			panic(ErrOverflow)
 		}
 	}
 	panic(ErrOverflow)
