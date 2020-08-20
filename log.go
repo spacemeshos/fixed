@@ -61,3 +61,7 @@ func alogx(x int64, a int64) int64 {
 func Log(x Fixed) Fixed {
 	return Fixed{log(x.int64)}
 }
+
+func alogx128(x int64, a int64) fixed128 {
+	return mul128_56(mul(log2(x), invLog2E), a)
+}

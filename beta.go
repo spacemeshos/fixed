@@ -12,24 +12,32 @@ func incomplete(a, b, x int64) int64 {
 	// d_{2m}   = m(b-m)x/((a+2m-1)(a+2m))
 	bt := int64(0)
 	if 0 < x && x < oneValue {
-		bt = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + alogx(x, a) + alogx(oneValue-x, b))
+		q := add128(
+				sub128(lgamma128(a+b), lgamma128(a), lgamma128(b)),
+				alogx128(x,a),
+				alogx128(oneValue-x, b))
+		// q obviously must be small enough
+		bt = exp(q.fixed())
+		//bt = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + alogx(x, a) + alogx(oneValue-x, b))
 	} else if x < 0 || x > oneValue {
 		panic(ErrOverflow)
 	}
 
 	if x >= div(a+oneValue, a+b+oneValue+oneValue) {
 		// symmetry transform
-		return oneValue - mulDiv(bt, bcf(oneValue-x, b, a), b)
+		return oneValue - mul( bcf(oneValue-x, b, a), div(bt, b) )
+		//return oneValue - mulDiv(bt, bcf(oneValue-x, b, a), b)
 	}
-	return mulDiv(bt, bcf(x, a, b), a)
+	return mul( bcf(x, a, b), div(bt, a) )
+	//return mulDiv(bt, bcf(x, a, b), a)
 }
 
 func bcf(x, a, b int64) int64 {
-	const iters = 121
+	const iters = 1300
 	const epsilon = int64(1)
 
 	nonzero := func(z int64) int64 {
-		const minval = int64(1)
+		const minval = 1 //oneValue >> (totalBits-fracBits)
 		if abs(z) < minval {
 			return minval
 		}
@@ -42,14 +50,19 @@ func bcf(x, a, b int64) int64 {
 	for m := oneValue; m < fixed(iters); m += oneValue {
 		a_m2 := a + m + m
 
-		// d_{2m}
-		n := mulDiv(mul(x, b-m), m, mul(a_m2-oneValue, a_m2))
+		// x <= oneValue, a + b < max fixed value
+		// => d_{2m} and d_{2m+1} < max fixed value
+
+		// d_{2m} = m(b-m)x/((a+2m-1)(a+2m)) = m/(a+2m) * (b-m)/(a+2m-1) * x
+		n := mul(div(mul(m,x),a_m2), div(b-m,a_m2-oneValue))
+		//n := mulDiv(mul(x, b-m), m, mul(a_m2-oneValue, a_m2))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 		h = mul(mul(h, d), c)
 
-		// d_{2m+1}
-		n = mulDiv(mul(x, a+b+m), -a-m, mul(a_m2, a_m2+oneValue))
+		// d_{2m+1} = -(a+m)(a+b+m)x/((a+2m)(a+2m+1)) = (a+m)/(a+2m) * (a+b+m)/(a+2m+1) * -x
+		n = mul(div(mul(a+m,-x),a_m2), div(a+b+m,a_m2+oneValue))
+		//n = mulDiv(mul(x, a+b+m), -a-m, mul(a_m2, a_m2+oneValue))
 		d = inv(nonzero(oneValue + mul(n, d)))
 		c = nonzero(oneValue + div(n, c))
 

@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-func Test_Lgamma(t *testing.T) {
+func Test_Lgamma1(t *testing.T) {
 	acc := accuracy{Epsilon: 64}
 	rand.Seed(43)
-	step := oneValue >> 16
-	for i := step; i < 100*oneValue; i += step {
+	step := oneValue >> 4
+	for i := step; i < 2000*oneValue; i += step {
 		a := randomFixed(i)
 		y := Lgamma(Fixed{a})
 		got := y.Float()
