@@ -9,13 +9,13 @@ import (
 func TestRange_Log(t *testing.T) {
 	rand.Seed(42)
 	step := oneValue >> 12
-	acc := accuracy{Epsilon: 1 << 3}
-	for i := oneValue; i < 27*oneValue; i += step {
+	acc := accuracy{Epsilon: 1e-15}
+	for i := step; i < 63*oneValue; i += step {
 		a := randomFixed(int64(i))
-		y := Log(Fixed{a})
-		want := math.Log(float(a))
+		y := log(a)
+		want := math.Log(float56(a))
 		if ok := acc.update(y, want); !ok {
-			t.Errorf("log(%v|%v) => %v: got %v, want %v|%v", Fixed{a}, float(a), y, y.Float(), From(want), want)
+			t.Errorf("log(%v|%v) => %v|%v, want %v|%v", rawfixed(a), float56(a), y, y.float(), From(want), want)
 			t.FailNow()
 		}
 	}
@@ -24,28 +24,50 @@ func TestRange_Log(t *testing.T) {
 
 func TestRange_Log2(t *testing.T) {
 	rand.Seed(42)
-	//step := oneValue >> 12
-	acc := accuracy{Epsilon: 1 << max(int64(fracBits-46), 2)}
-	for i := 1; i < 1000000; i++ {
+	step := oneValue >> 12
+	acc := accuracy{Epsilon: 1e-14}
+	for i := step; i < 63*oneValue; i += step {
 		a := randomFixed(int64(i))
-		y := Log2(Fixed{a})
-		want := math.Log2(float(a))
+		y := rawfixed(log2(a, fracBits))
+		want := math.Log2(float56(a))
 		if ok := acc.update(y, want); !ok {
-			t.Errorf("log2(%v|%v) => %v: got %v, want %v|%v", Fixed{a}, float(a), y, y.Float(), From(want), want)
+			t.Errorf("log(%v|%v) => %v|%v, want %v|%v", rawfixed(a), float56(a), y, y.float(), From(want), want)
 			t.FailNow()
 		}
 	}
 	t.Log(acc)
 }
 
-func BenchmarkFixed_Log(b *testing.B) {
-	for i := 1; i < b.N+1; i++ {
-		Result = Log(Fixed{int64(i)})
+func TestRange_iLog(t *testing.T) {
+	rand.Seed(42)
+	acc := accuracy{Epsilon: 1e-15}
+	maxarg := int64(100000)
+	step := maxarg / 200
+	for i := int64(0); i < 1000; i += step {
+		a := i + rand.Int63n(step)
+		y := rawfixed(ilog56(a))
+		want := math.Log(float64(a))
+		if ok := acc.update(y, want); !ok {
+			t.Errorf("log(%v) => %v|%v, want %v|%v", a, y, y.float(), From(want), want)
+			t.FailNow()
+		}
 	}
+	t.Log(acc)
 }
 
-func BenchmarkFixed_LogRef(b *testing.B) {
-	for i := 1; i < b.N+1; i++ {
-		Result = From(math.Log(Fixed{int64(i)}.Float()))
+func TestRange_iLog2(t *testing.T) {
+	rand.Seed(42)
+	acc := accuracy{Epsilon: 1e-14}
+	maxarg := int64(100000)
+	step := maxarg / 200
+	for i := int64(0); i < 1000; i += step {
+		a := i + rand.Int63n(step)
+		y := rawfixed(log2(a, 0))
+		want := math.Log2(float64(a))
+		if ok := acc.update(y, want); !ok {
+			t.Errorf("log(%v) => %v|%v, want %v|%v", a, y, y.float(), From(want), want)
+			t.FailNow()
+		}
 	}
+	t.Log(acc)
 }

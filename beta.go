@@ -1,76 +1,93 @@
 package fixed
 
-// BetaReg calculates regularized incomplete beta function Iₓ(a,b)
-func BetaReg(a, b, x Fixed) Fixed {
-	return Fixed{incomplete(a.int64, b.int64, x.int64)}
-}
-
-func incomplete(a, b, x int64) int64 {
+// a,b  - integer values
+// x - 8/56 fixed point value
+func incomplete(a, b, x int64) Fixed {
 	// Iₓ(a,b) = (xᵃ*(1-x)ᵇ)/(a*B(a,b)) * (1/(1+(d₁/(1+(d₂/(1+...))))))
 	// (xᵃ*(1-x)ᵇ)/B(a,b) = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + a*log(x) + b*log(1-x))
 	// d_{2m+1} = -(a+m)(a+b+m)x/((a+2m)(a+2m+1))
 	// d_{2m}   = m(b-m)x/((a+2m-1)(a+2m))
-	bt := int64(0)
+
+	if a > int64(1)<<30 || b > int64(1)<<30 {
+		panic(ErrOverflow)
+	}
+
+	bt := fixed(0)
+
 	if 0 < x && x < oneValue {
-		q := add128(
-				sub128(lgamma128(a+b), lgamma128(a), lgamma128(b)),
-				alogx128(x,a),
-				alogx128(oneValue-x, b))
-		// q obviously must be small enough
-		bt = exp(q.fixed())
-		//bt = exp(lgamma(a+b) - lgamma(a) - lgamma(b) + alogx(x, a) + alogx(oneValue-x, b))
+		bt = exp(addx(subx(lgamma(a+b), lgamma(a), lgamma(b)), alogx(x, a), alogx(oneValue-x, b)))
 	} else if x < 0 || x > oneValue {
 		panic(ErrOverflow)
 	}
 
-	if x >= div(a+oneValue, a+b+oneValue+oneValue) {
-		// symmetry transform
-		return oneValue - mul( bcf(oneValue-x, b, a), div(bt, b) )
-		//return oneValue - mulDiv(bt, bcf(oneValue-x, b, a), b)
+	bcfx := func() Fixed {
+		if bt.iszero() {
+			return bt
+		}
+		h := bcf(x, a, b)
+		return div(mul(bt, h), fixed(a))
 	}
-	return mul( bcf(x, a, b), div(bt, a) )
-	//return mulDiv(bt, bcf(x, a, b), a)
+
+	if x > div(fixed(a+1), fixed(a+b+2)).fixed56() {
+		// symmetry transform
+		// 1 - bt/b*bcf(1-x,b,a)
+		x, a, b = oneValue-x, b, a
+		return sub(fixedOne, bcfx())
+	}
+	return bcfx()
 }
 
-func bcf(x, a, b int64) int64 {
-	const iters = 1300
-	const epsilon = int64(1)
+var bcfEpsilon = from(1e-14)
 
-	nonzero := func(z int64) int64 {
-		const minval = 1 //oneValue >> (totalBits-fracBits)
-		if abs(z) < minval {
-			return minval
+func bcf(x, a, b int64) Fixed {
+	const iters = 300
+	xx := rawfixed(x)
+
+	nonzero := func(z Fixed) Fixed {
+		if z.iszero() {
+			return rawfixed(1)
 		}
 		return z
 	}
 
-	c := oneValue
-	d := inv(nonzero(oneValue - mulDiv(a+b, x, a+oneValue)))
+	c := fixedOne
+	// d = 1/(nonzero(1-x*(a+b)/(a+1)))
+	d := nonzero(sub(fixedOne, div(mul(xx, fixed(a+b)), fixed(a+1)))).inv()
+
 	h := d
-	for m := oneValue; m < fixed(iters); m += oneValue {
-		a_m2 := a + m + m
+	del := fixed(0)
 
-		// x <= oneValue, a + b < max fixed value
-		// => d_{2m} and d_{2m+1} < max fixed value
+	for m := int64(1); m < iters; m++ {
+		//fm := fixed(m)
+		//amm := fixed(a + m + m)
 
-		// d_{2m} = m(b-m)x/((a+2m-1)(a+2m)) = m/(a+2m) * (b-m)/(a+2m-1) * x
-		n := mul(div(mul(m,x),a_m2), div(b-m,a_m2-oneValue))
-		//n := mulDiv(mul(x, b-m), m, mul(a_m2-oneValue, a_m2))
-		d = inv(nonzero(oneValue + mul(n, d)))
-		c = nonzero(oneValue + div(n, c))
-		h = mul(mul(h, d), c)
+		// d_{2m} = n = m(b-m)x/((a+2m-1)(a+2m))
+		//n := div(mulx(fm, fixed(b-m), xx), mul(fixed(a+m+m-1), amm))
+		n := div(mul(xx, fixed(m*(b-m))), fixed((a+m+m-1)*(a+m+m)))
 
-		// d_{2m+1} = -(a+m)(a+b+m)x/((a+2m)(a+2m+1)) = (a+m)/(a+2m) * (a+b+m)/(a+2m+1) * -x
-		n = mul(div(mul(a+m,-x),a_m2), div(a+b+m,a_m2+oneValue))
-		//n = mulDiv(mul(x, a+b+m), -a-m, mul(a_m2, a_m2+oneValue))
-		d = inv(nonzero(oneValue + mul(n, d)))
-		c = nonzero(oneValue + div(n, c))
+		// d = 1/(nonzero(1+n*d))
+		d = nonzero(muladd1(n, d)).inv()
+		// c = nonzero(1 + n/c)
+		c = nonzero(divadd1(n, c))
+		// h = h*d*c
+		h = mulx(h, d, c)
 
-		del := mul(d, c)
+		// d_{2m+1} = n = -(a+m)(a+b+m)x/((a+2m)(a+2m+1))
+		//n = div(mulx(fixed(-a-m), fixed(a+b+m), xx), mul(amm, fixed(a+m+m+1)))
+		n = div(mul(fixed((-a-m)*(a+b+m)), xx), fixed((a+m+m)*(a+m+m+1)))
+		// d = 1/(nonzero(1+n*d))
+		d = nonzero(muladd1(n, d)).inv()
+		// c = nonzero(1 + n/c)
+		c = nonzero(divadd1(n, c))
+
+		del = mul(d, c)
+		//fmt.Println(del.Float())
 		h = mul(h, del)
-		if abs(del-oneValue) <= epsilon {
+
+		if sub(del, fixedOne).less(bcfEpsilon) {
 			return h
 		}
 	}
-	panic(ErrOverflow)
+	//panic(ErrOverflow)
+	return h
 }
