@@ -11,7 +11,11 @@ func (x Fixed) String() string {
 	return x.format()
 }
 
-func New(val int64) Fixed {
+func New(val int) Fixed {
+	return fixed(int64(val))
+}
+
+func New64(val int64) Fixed {
 	return fixed(val)
 }
 
@@ -19,13 +23,8 @@ func From(val float64) Fixed {
 	return from(val)
 }
 
-func One() Fixed {
-	return fixedOne
-}
-
-func Zero() Fixed {
-	return Fixed{}
-}
+var One = fixedOne
+var Zero = Fixed{}
 
 func (x Fixed) Abs() Fixed {
 	return x.abs()
@@ -108,12 +107,12 @@ func (x Fixed) Bytes() []byte {
 	return b[:]
 }
 
-func BinCDF(n int64, p Fixed, x int64) Fixed {
+func BinCDF(n int, p Fixed, x int) Fixed {
 	if x < 0 {
-		return Zero()
+		return Zero
 	} else if x >= n {
-		return One()
+		return One
 	} else {
-		return incomplete(n-x, x+1, oneValue-p.fixed56())
+		return incomplete(int64(n-x), int64(x+1), oneValue-p.fixed56())
 	}
 }
