@@ -36,7 +36,7 @@ func TestFixed(t *testing.T) {
 		if got, want := x.Ceil(), int64(tc.ceil); got != want {
 			t.Errorf("tc.x=%v: Ceil: got %v, want %v", tc.x, got, want)
 		}
-		if got, want := x.Mul(One()), x; got != want {
+		if got, want := x.Mul(One), x; got != want {
 			t.Errorf("tc.x=%v: Mul by one: got %v, want %v", tc.x, got, want)
 		}
 	}

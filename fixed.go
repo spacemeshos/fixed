@@ -116,3 +116,13 @@ func BinCDF(n int, p Fixed, x int) Fixed {
 		return incomplete(int64(n-x), int64(x+1), oneValue-p.fixed56())
 	}
 }
+
+func BinCDF64(n int64, p Fixed, x int64) Fixed {
+	if x < 0 {
+		return Zero
+	} else if x >= n {
+		return One
+	} else {
+		return incomplete(n-x, x+1, oneValue-p.fixed56())
+	}
+}

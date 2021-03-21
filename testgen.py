@@ -268,7 +268,7 @@ var bincdfTestCases_{:1} = []BinCDFCase{{'''.format(B))
 func Benchmark_Fixed_BinCDF_{}(b *testing.B) {{
 	for i := 0; i < b.N; i++ {{
 		tc := bincdfTestCases_{}[i%len(bincdfTestCases_{})]
-		bincdfResultFix = BinCDF(tc.n, From(tc.p), tc.x)
+		bincdfResultFix = BinCDF64(tc.n, From(tc.p), tc.x)
 	}}
 
 	bincdfResultFix.lo++
@@ -287,7 +287,7 @@ func TestFixed_BinCDF_{}(t *testing.T) {{
 	acc := accuracy{{Epsilon: '''+e+'''}}
 	for i, tc := range bincdfTestCases_{} {{
 		p := From(tc.p)
-		got := BinCDF(tc.n, p, tc.x)
+		got := BinCDF64(tc.n, p, tc.x)
 		if ok := acc.update(got, tc.cdf); !ok {{
 			t.Errorf("%d: BinCDF(%v,%v,%v) => got %v|%v, want %v|%v", i, tc.n, tc.p, tc.x, got, got.Float(), From(tc.cdf), tc.cdf)
 		}}
