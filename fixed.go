@@ -1,149 +1,128 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+package fixed
 
-// Package fixed implements fixed-point integer types.
-package fixed // import "github.com/spacemeshos/fixed"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"errors"
+)
 
-// Fixed is a signed fixed-point number.
-type Fixed struct {
-	int64
-}
+var ErrOverflow = errors.New("overflow")
 
-// New creates Fixed from integer
-func New(i int) Fixed {
-	return Fixed{fixed(i)}
-}
-
-// From creates Fixed from float
-func From(f float64) Fixed {
-	return Fixed{from(f)}
-}
-
-// Raw creates Fixed from raw value
-func Raw(i int64) Fixed {
-	return Fixed{i}
-}
-
-// DivUint64 creates new Fixed equal to p/q unsigned result
-func DivUint64(p, q uint64) Fixed {
-	return Fixed{udiv(p, q)}
-}
-
-// Div64 creates new Fixed equal to p/q signed result
-func Div64(p, q int64) Fixed {
-	return Fixed{div(p, q)}
-}
-
-// FracFromBytes takes only fractional part from bytes array and return fixed value
-func FracFromBytes(x []byte) Fixed {
-	return Fixed{int64(binary.LittleEndian.Uint64(x)) & fracMask}
-}
-
-// FromBytes creates fixed value from bytes array
-func FromBytes(x []byte) Fixed {
-	return Fixed{int64(binary.LittleEndian.Uint64(x))}
-}
-
-// Bytes converts fixed value into bytes array
-func (x Fixed) Bytes() []byte {
-	b := [8]byte{}
-	binary.LittleEndian.PutUint64(b[:], uint64(x.int64))
-	return b[:]
-}
-
-// Float converts Fixed to float64
-func (x Fixed) Float() float64 {
-	return float(x.int64)
-}
-
-var One = Fixed{oneValue}
-
-// Neg inverts sign
-func (x Fixed) Neg() Fixed {
-	return Fixed{-x.int64}
-}
-
-// String returns a human-readable representation of a fixed-point number.
 func (x Fixed) String() string {
-	return format(x.int64)
+	return x.format()
 }
 
-// Floor returns the greatest integer value less than or equal to x.
-//
-// Its return type is int, not Fixed.
-func (x Fixed) Floor() int {
-	return integer(x.int64)
+func New(val int) Fixed {
+	return fixed(int64(val))
 }
 
-// Round returns the nearest integer value to x. Ties are rounded up.
-//
-// Its return type is int, not Fixed.
-func (x Fixed) Round() int {
-	return integer(round(x.int64))
+func New64(val int64) Fixed {
+	return fixed(val)
 }
 
-// Ceil returns the least integer value greater than or equal to x.
-//
-// Its return type is int, not Fixed.
-func (x Fixed) Ceil() int {
-	return integer(ceil(x.int64))
+func From(val float64) Fixed {
+	return from(val)
 }
 
-// Value returns interval value
-func (x Fixed) Value() int64 {
-	return x.int64
-}
+var One = fixedOne
+var Zero = Fixed{}
 
-// Add returns x+y in fixed-point arithmetic.
-// Panics if overflows
-func (x Fixed) Add(y Fixed) Fixed {
-	v := x.int64 + y.int64
-	if x.int64>>63 == y.int64>>63 && x.int64>>63 != v>>63 {
-		panic(ErrOverflow)
-	}
-	return Fixed{v}
-}
-
-// UnsafeAdd returns x+y in fixed-point arithmetic.
-// Does not have overflow check
-func (x Fixed) UnsafeAdd(y Fixed) Fixed {
-	return Fixed{x.int64 + y.int64}
-}
-
-// Sub returns x-y in fixed-point arithmetic.
-// Panics if overflows
-func (x Fixed) Sub(y Fixed) Fixed {
-	v := x.int64 - y.int64
-	if x.int64>>63 != y.int64>>63 && x.int64>>63 != v>>63 {
-		panic(ErrOverflow)
-	}
-	return Fixed{v}
-}
-
-// UnsafeSub returns x-y in fixed-point arithmetic.
-// Does not have overflow check
-func (x Fixed) UnsafeSub(y Fixed) Fixed {
-	return Fixed{x.int64 - y.int64}
-}
-
-// Abs returns absolute value of the fixed-point number
 func (x Fixed) Abs() Fixed {
-	return Fixed{abs(x.int64)}
+	return x.abs()
 }
 
-// LessThan compares fixed values and returns true if x < y
+func (x Fixed) Neg() Fixed {
+	return x.neg()
+}
+
+func (x Fixed) Floor() int64 {
+	return x.floor()
+}
+
+func (x Fixed) Ceil() int64 {
+	return x.ceil()
+}
+
+func (x Fixed) Round() int64 {
+	return x.round()
+}
+
+func (x Fixed) Float() float64 {
+	return x.float()
+}
+
+func (x Fixed) Mul(y Fixed) Fixed {
+	return mul(x, y)
+}
+
+func (x Fixed) Div(y Fixed) Fixed {
+	return div(x, y)
+}
+
+func (x Fixed) Add(y Fixed) Fixed {
+	return add(x, y)
+}
+
+func (x Fixed) Sub(y Fixed) Fixed {
+	return sub(x, y)
+}
+
 func (x Fixed) LessThan(y Fixed) bool {
-	return x.int64 < y.int64
+	return x.less(y)
 }
 
 // GreaterThan compares fixed values and returns true if x > y
 func (x Fixed) GreaterThan(y Fixed) bool {
-	return x.int64 > y.int64
+	return x.greater(y)
 }
 
 // EqualTo compares fixed values and returns true if x == y
 func (x Fixed) EqualTo(y Fixed) bool {
-	return x.int64 == y.int64
+	return x.equal(y)
+}
+
+func DivUint64(p, q uint64) Fixed {
+	return udiv(ufixed(p), ufixed(q))
+}
+
+// Div64 creates new Fixed equal to p/q signed result
+func Div64(p, q int64) Fixed {
+	return div(fixed(p), fixed(q))
+}
+
+// FracFromBytes takes only fractional part from bytes array and return fixed value
+func FracFromBytes(x []byte) Fixed {
+	return rawfixed(int64(binary.LittleEndian.Uint64(x)) & fracMask)
+}
+
+// FromBytes creates fixed value from bytes array
+func FromBytes(x []byte) Fixed {
+	return Fixed{lo: binary.LittleEndian.Uint64(x[:8]), hi: binary.LittleEndian.Uint64(x[8:])}
+}
+
+// Bytes converts fixed value into bytes array
+func (x Fixed) Bytes() []byte {
+	b := [16]byte{}
+	binary.LittleEndian.PutUint64(b[:8], x.lo)
+	binary.LittleEndian.PutUint64(b[8:], x.hi)
+	return b[:]
+}
+
+func BinCDF(n int, p Fixed, x int) Fixed {
+	if x < 0 {
+		return Zero
+	} else if x >= n {
+		return One
+	} else {
+		return incomplete(int64(n-x), int64(x+1), oneValue-p.fixed56())
+	}
+}
+
+func BinCDF64(n int64, p Fixed, x int64) Fixed {
+	if x < 0 {
+		return Zero
+	} else if x >= n {
+		return One
+	} else {
+		return incomplete(n-x, x+1, oneValue-p.fixed56())
+	}
 }
