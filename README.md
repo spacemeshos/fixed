@@ -4,7 +4,7 @@ The library implements basic math operations for 72/56 fixed-point values, and L
 
 ### Motivation
 
-There is no efficient golang implementation for fixed-point math with a high-resolution bincdf function.
+There is no efficient golang implementation for fixed-point math with a high-precision bincdf function.
 
 The library uses a 56-bit fractional part to achieve maximum performance on math functions like Log, Exp, and Lgamma.
 
