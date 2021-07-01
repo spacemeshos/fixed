@@ -7,6 +7,9 @@ import (
 
 var ErrOverflow = errors.New("overflow")
 
+// Ln2Value = logₑ(2)
+var Ln2Value = Fixed{uint64(ln2), 0 }
+
 func (x Fixed) String() string {
 	return x.format()
 }
@@ -125,4 +128,8 @@ func BinCDF64(n int64, p Fixed, x int64) Fixed {
 	} else {
 		return incomplete(n-x, x+1, oneValue-p.fixed56())
 	}
+}
+
+func Exp(a Fixed) Fixed {
+	return exp(a)
 }
