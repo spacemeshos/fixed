@@ -1,3 +1,3 @@
 module github.com/spacemeshos/fixed
 
-go 1.14
+go 1.19

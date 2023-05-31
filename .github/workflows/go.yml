@@ -1,0 +1,33 @@
+name: Go
+
+on:
+  # Allow manually triggering this workflow
+  workflow_dispatch:
+  # run for all pull requests and pushes to certain branches
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  build:
+    strategy:
+      matrix:
+        os: 
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+          - [self-hosted, linux-arm64]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        check-latest: true
+        go-version-file: "go.mod"
+    - name: Build
+      run: go build -v ./...
+    - name: Test
+      run: go test -v ./...
