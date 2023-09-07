@@ -23,8 +23,10 @@ func From(val float64) Fixed {
 	return from(val)
 }
 
-var One = fixedOne
-var Zero = Fixed{}
+var (
+	One  = fixedOne
+	Zero = Fixed{}
+)
 
 func (x Fixed) Abs() Fixed {
 	return x.abs()

@@ -9,11 +9,15 @@ type Fixed struct {
 	lo, hi uint64
 }
 
-var fixedRawval1 = rawfixed(1)
-var fixedOne = rawfixed(oneValue)
+var (
+	fixedRawval1 = rawfixed(1)
+	fixedOne     = rawfixed(oneValue)
+)
 
-const unsignMask = uint64(1)<<63 - 1
-const signMask = uint64(1) << 63
+const (
+	unsignMask = uint64(1)<<63 - 1
+	signMask   = uint64(1) << 63
+)
 
 func sign_(x int64) uint64 {
 	return uint64(x) & signMask

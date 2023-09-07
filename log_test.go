@@ -7,7 +7,6 @@ import (
 )
 
 func TestRange_Log(t *testing.T) {
-	rand.Seed(42)
 	step := oneValue >> 12
 	acc := accuracy{Epsilon: 1e-15}
 	for i := step; i < 63*oneValue; i += step {
@@ -23,7 +22,6 @@ func TestRange_Log(t *testing.T) {
 }
 
 func TestRange_Log2(t *testing.T) {
-	rand.Seed(42)
 	step := oneValue >> 12
 	acc := accuracy{Epsilon: 1e-14}
 	for i := step; i < 63*oneValue; i += step {
@@ -39,12 +37,12 @@ func TestRange_Log2(t *testing.T) {
 }
 
 func TestRange_iLog(t *testing.T) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	acc := accuracy{Epsilon: 1e-15}
 	maxarg := int64(100000)
 	step := maxarg / 200
 	for i := int64(0); i < 1000; i += step {
-		a := i + rand.Int63n(step)
+		a := i + rng.Int63n(step)
 		y := rawfixed(ilog56(a))
 		want := math.Log(float64(a))
 		if ok := acc.update(y, want); !ok {
@@ -56,7 +54,6 @@ func TestRange_iLog(t *testing.T) {
 }
 
 func TestRange_iLog2(t *testing.T) {
-	rand.Seed(42)
 	acc := accuracy{Epsilon: 1e-14}
 	maxarg := int64(100000)
 	step := maxarg / 200
