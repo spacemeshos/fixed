@@ -2,14 +2,12 @@ package fixed
 
 import (
 	"math"
-	"math/rand"
 	"testing"
 )
 
 func TestRange_NegExp(t *testing.T) {
-	var maxEpow = fixed56(34)
+	maxEpow := fixed56(34)
 	acc := accuracy{Epsilon: float56(1 << max64(int64(fracBits-46), 2))}
-	rand.Seed(42)
 	step := maxEpow / 10000
 	t.Logf("max possible exponent argument is %g, step %g\n", float56(maxEpow), float56(step))
 	for i := -maxEpow; i <= 0; i += step {
@@ -26,9 +24,8 @@ func TestRange_NegExp(t *testing.T) {
 }
 
 func TestRange_Exp(t *testing.T) {
-	var maxEpow = fixed56(33) //fixed56(88)
+	maxEpow := fixed56(33) // fixed56(88)
 	acc := accuracy{}
-	rand.Seed(43)
 	step := maxEpow / 1000
 	t.Logf("max possible exponent argument is %g, step %g\n", float56(maxEpow), float56(step))
 	for i := fixed56(0); i < maxEpow; i += step {

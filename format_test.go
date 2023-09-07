@@ -46,7 +46,6 @@ var formatCases = []struct {
 
 func TestFixed_Format(t *testing.T) {
 	for _, tc := range formatCases {
-
 		if q := from(tc.x); q.format() != tc.s {
 			t.Errorf("fromat(%v) => %v|%v, want %v|%v", tc.x, q.format(), q.float(), tc.s, tc.x)
 		}

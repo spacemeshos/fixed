@@ -24,7 +24,7 @@ func div128(u, v Fixed) (Fixed, Fixed) {
 
 	tq, _ := bits.Div64(u.hi, u.lo, v1.hi)
 	tq >>= 64 - n
-	tq -= -tq >> 63 //if tq != 0 { tq-- }
+	tq -= -tq >> 63 // if tq != 0 { tq-- }
 
 	q := Fixed{lo: tq}
 	r := sub(u, mul64_(v, tq))

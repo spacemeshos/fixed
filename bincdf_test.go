@@ -72,8 +72,10 @@ func TestFixed_BinCDFd(t *testing.T) {
 	fmt.Printf("cdf(30000, 0.5, 15000) => 0.50230327513576946 | fixed: %.17f, float64: %17f\n", v.Float(), v2)
 }
 
-var bincdfResultFix Fixed
-var bincdfResultFlt float64
+var (
+	bincdfResultFix Fixed
+	bincdfResultFlt float64
+)
 
 func incomplete_(a, b, x float64) float64 {
 	// Iₓ(a,b) = (xᵃ*(1-x)ᵇ)/(a*B(a,b)) * (1/(1+(d₁/(1+(d₂/(1+...))))))
@@ -147,7 +149,7 @@ func bcf_(x, a, b float64) float64 {
 			return h
 		}
 	}
-	//panic(ErrOverflow)
+	// panic(ErrOverflow)
 	return h
 }
 

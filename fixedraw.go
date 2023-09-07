@@ -12,10 +12,12 @@ const (
 	oneValue  int64 = 1 << fracBits
 )
 
-const ln2 = int64(0xb17217f7d1cf78)    // logₑ(2)
-const invLog2E = ln2                   // log₂(2)/log₂(e) = logₑ(2) => 1/log₂(e) = logₑ(2)
-const log2E = int64(0x171547652b82fe0) // log₂(e)
-const invLn2 = log2E                   // logₑ(e)/logₑ(2) = log₂(e) => 1/logₑ(2) = log₂(e)
+const (
+	ln2      = int64(0xb17217f7d1cf78)  // logₑ(2)
+	invLog2E = ln2                      // log₂(2)/log₂(e) = logₑ(2) => 1/log₂(e) = logₑ(2)
+	log2E    = int64(0x171547652b82fe0) // log₂(e)
+	invLn2   = log2E                    // logₑ(e)/logₑ(2) = log₂(e) => 1/logₑ(2) = log₂(e)
+)
 
 func fixed56(v int64) int64 {
 	return v << fracBits
@@ -63,7 +65,7 @@ func float56(x int64) float64 {
 	a := uint64((x ^ xs) - xs)
 	l := bits.Len64(a)
 	if a != 0 {
-		if l > 52 { //float64 significat bits count
+		if l > 52 { // float64 significat bits count
 			a = a >> (l - 52 - 1)
 			l = l - fracBits - 1
 		} else {

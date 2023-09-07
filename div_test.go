@@ -15,7 +15,7 @@ func testDivfunc(t *testing.T, x, y, z float64, s string) {
 	} else {
 		a, b := from(x), from(y)
 		got := div(a, b)
-		//t.Logf("* x.Div(y): %s|%v, want: %s|%v, %v|%v / %v|%v", got, got.float(), s, z, a, x, b, y)
+		// t.Logf("* x.Div(y): %s|%v, want: %s|%v, %v|%v / %v|%v", got, got.float(), s, z, a, x, b, y)
 		if got.format() != s {
 			t.Errorf("x.Div(y): %s|%v, want: %s|%v, %v/%v", got, got.float(), s, z, x, y)
 		}
