@@ -16,9 +16,10 @@ jobs:
       matrix:
         os: 
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
           - [self-hosted, linux-arm64]
+          - macos-latest
+          - [self-hosted, macos, arm64]
+          - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
